@@ -1,0 +1,9 @@
+Options -Indexes
+
+<FilesMatch "^(?:\.env(?:\..*)?|\.gitignore|README\.md|package(?:-lock)?\.json)$">
+  Require all denied
+</FilesMatch>
+
+RewriteEngine On
+RewriteRule ^(?:src|database|docs|scripts|test|node_modules)(?:/|$) - [F,NC,L]
+RewriteRule ^$ /john/public/ [R=302,L]

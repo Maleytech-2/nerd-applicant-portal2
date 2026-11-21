@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registration Application | NERD Clearance Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../assets/css/public.css" rel="stylesheet">
+    <style>
+      body{background:#f2f5f9}.app-nav{min-height:72px;background:var(--navy)}
+      .app-main{max-width:1180px;margin:auto;padding:36px 20px}.app-layout{display:grid;grid-template-columns:260px minmax(0,1fr);gap:20px}
+      .progress-panel,.form-panel{border:1px solid var(--border);border-radius:16px;background:white}
+      .progress-panel{padding:18px;height:max-content;position:sticky;top:92px}.progress-panel h2{color:var(--navy);font-size:16px;margin:4px 8px 14px}
+      .step-list{list-style:none;padding:0;margin:0}.step-item{display:flex;gap:10px;align-items:flex-start;padding:9px;border-radius:8px;color:var(--muted);font-size:13px}
+      .step-item span{display:grid;width:26px;height:26px;place-items:center;flex:0 0 26px;border-radius:50%;background:#eef3f9;color:var(--navy);font-size:11px;font-weight:800}
+      .step-item.active{background:#eef3f9;color:var(--navy);font-weight:700}.step-item.active span{background:var(--navy);color:var(--gold)}.step-item.done span{background:#e6f5ed;color:#28704f}
+      .form-header{padding:24px 28px;border-bottom:1px solid var(--border)}.form-header h1{margin:7px 0 4px;color:var(--navy);font-size:30px}.form-header p{margin:0;color:var(--muted)}
+      .form-step{display:none;padding:28px}.form-step.active{display:block}.form-step h2{color:var(--navy);font-size:20px;margin-bottom:20px}
+      .form-label{font-size:13px;font-weight:700}.form-control,.form-select{min-height:46px;border-radius:8px;border-color:#d4dde8}.form-control:focus,.form-select:focus{border-color:var(--gold-dark);box-shadow:0 0 0 3px rgba(214,173,96,.13)}
+      .form-actions{display:flex;justify-content:space-between;gap:10px;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}.form-actions .btn{min-height:44px}
+      .review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.review-item{border:1px solid var(--border);border-radius:8px;padding:12px}.review-item span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase}.review-item strong{color:var(--navy);font-size:14px}
+      .locked-alert{margin:28px;border-radius:10px;padding:18px;background:#fff3d6;border:1px solid #e9d49a}
+      @media(max-width:991px){.app-layout{grid-template-columns:1fr}.progress-panel{position:static}.step-list{display:flex;overflow:auto}.step-item{min-width:150px}.review-grid{grid-template-columns:1fr}}
+    </style>
+  </head>
+  <body>
+    <nav class="navbar app-nav navbar-dark"><div class="container"><a class="navbar-brand d-flex align-items-center" href="/"><span class="brand-mark">OJ</span><span class="brand-copy"><strong>OGAH JOHN BUSINESS CENTER</strong><small>UDUS MINI MART</small></span></a><a class="btn btn-outline-light btn-sm" href="/applicant/dashboard">Dashboard</a></div></nav>
+    <main class="app-main">
+      <div class="app-layout">
+        <aside class="progress-panel"><h2>Application progress</h2><ol class="step-list" id="stepList">
+          <li class="step-item active" data-step="0"><span>1</span>Personal information</li>
+          <li class="step-item" data-step="1"><span>2</span>Next of kin</li>
+          <li class="step-item" data-step="2"><span>3</span>Academic information</li>
+          <li class="step-item" data-step="3"><span>4</span>Documents</li>
+          <li class="step-item" data-step="4"><span>5</span>Project documents</li>
+          <li class="step-item" data-step="5"><span>6</span>Supervisor</li>
+          <li class="step-item" data-step="6"><span>7</span>HOD information</li>
+          <li class="step-item" data-step="7"><span>8</span>Review and submit</li>
+        </ol></aside>
+        <section class="form-panel">
+          <header class="form-header"><span class="section-kicker">Multi-step application</span><h1 id="formTitle">Personal information</h1><p id="formSubtitle">Complete all required fields accurately.</p></header>
+          <div class="locked-alert d-none" id="lockedAlert"><strong>Application form locked.</strong><p class="mb-0">This form becomes available only after administrator approval of payment.</p></div>
+          <div class="alert alert-warning d-none" id="correctionAlert" role="status"></div>
+          <form id="applicationForm" novalidate>
+            <div class="form-step active" data-step="0"><h2>Personal information</h2><div class="row g-3">
+              <div class="col-md-3"><label class="form-label" for="title">Title</label><select class="form-select" id="title" name="title"><option value="">Select</option><option>Mr</option><option>Mrs</option><option>Miss</option><option>Ms</option><option>Dr</option></select></div>
+              <div class="col-md-3"><label class="form-label" for="first_name">First name</label><input class="form-control" id="first_name" name="first_name" maxlength="80" required></div>
+              <div class="col-md-3"><label class="form-label" for="middle_name">Middle name</label><input class="form-control" id="middle_name" name="middle_name" maxlength="80"></div>
+              <div class="col-md-3"><label class="form-label" for="surname">Surname</label><input class="form-control" id="surname" name="surname" maxlength="80" required></div>
+              <div class="col-md-4"><label class="form-label" for="sex">Sex</label><select class="form-select" id="sex" name="sex" required><option value="">Select</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option></select></div>
+              <div class="col-md-4"><label class="form-label">Date of birth</label><input class="form-control" id="dobDisplay" type="text" readonly></div>
+              <div class="col-md-4"><label class="form-label" for="marital_status">Marital status</label><select class="form-select" id="marital_status" name="marital_status" required><option value="">Select</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option></select></div>
+              <div class="col-md-4"><label class="form-label" for="nin">NIN</label><input class="form-control" id="nin" name="nin" type="text" inputmode="numeric" minlength="11" maxlength="11" pattern="[0-9]{11}" title="Enter exactly 11 digits" required></div>
+              <div class="col-md-4"><label class="form-label" for="nationality">Nationality</label><input class="form-control" id="nationality" name="nationality" maxlength="100" required></div>
+              <div class="col-md-4"><label class="form-label" for="country">Country</label><input class="form-control" id="country" name="country" maxlength="100" required></div>
+              <div class="col-md-4"><label class="form-label" for="state_of_origin">State of origin</label><input class="form-control" id="state_of_origin" name="state_of_origin" maxlength="100" required></div>
+              <div class="col-md-4"><label class="form-label" for="local_government_area">Local government area</label><input class="form-control" id="local_government_area" name="local_government_area" maxlength="120"></div>
+              <div class="col-md-4"><label class="form-label" for="town_or_city">Town or city</label><input class="form-control" id="town_or_city" name="town_or_city" maxlength="120"></div>
+              <div class="col-12"><label class="form-label" for="residential_address">Residential address</label><textarea class="form-control" id="residential_address" name="residential_address" rows="2" required></textarea></div>
+              <div class="col-md-6"><label class="form-label" for="email_address">Email address</label><input class="form-control" id="email_address" name="email_address" type="email" maxlength="190" required></div>
+              <div class="col-md-6"><label class="form-label" for="phone_number">Phone number</label><input class="form-control" id="phone_number" name="phone_number" type="tel" inputmode="numeric" minlength="11" maxlength="11" pattern="[0-9]{11}" title="Enter exactly 11 digits" required></div>
+            </div></div>
+
+            <div class="form-step" data-step="1"><h2>Next-of-kin information</h2><div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="next_of_kin_full_name">Full name</label><input class="form-control" id="next_of_kin_full_name" name="next_of_kin_full_name" maxlength="160" required></div>
+              <div class="col-md-3"><label class="form-label" for="next_of_kin_phone">Phone number</label><input class="form-control" id="next_of_kin_phone" name="next_of_kin_phone" type="tel" inputmode="numeric" minlength="11" maxlength="11" pattern="[0-9]{11}" title="Enter exactly 11 digits" required></div>
+              <div class="col-md-3"><label class="form-label" for="next_of_kin_email">Email address</label><input class="form-control" id="next_of_kin_email" name="next_of_kin_email" type="email" maxlength="190"></div>
+            </div></div>
+
+            <div class="form-step" data-step="2"><h2>Academic information</h2><div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="institution_name">Institution</label><input class="form-control" id="institution_name" name="institution_name" maxlength="255" required></div>
+              <div class="col-md-3"><label class="form-label" for="faculty">Faculty</label><input class="form-control" id="faculty" name="faculty" maxlength="160" required></div>
+              <div class="col-md-3"><label class="form-label" for="department">Department</label><input class="form-control" id="department" name="department" maxlength="160" required></div>
+              <div class="col-md-4"><label class="form-label" for="programme_category">Programme category</label><select class="form-select" id="programme_category" name="programme_category" required><option value="">Select category</option><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Diploma">Diploma</option></select></div>
+              <div class="col-md-4"><label class="form-label" for="programme_type">Programme type</label><select class="form-select" id="programme_type" name="programme_type" required disabled><option value="">Select category first</option></select></div>
+              <div class="col-md-4"><label class="form-label" for="matriculation_number">Matriculation number</label><input class="form-control" id="matriculation_number" name="matriculation_number" maxlength="80" required></div>
+              <div class="col-12"><label class="form-label" for="course_of_study">Course of study</label><input class="form-control" id="course_of_study" name="course_of_study" maxlength="160" required></div>
+            </div></div>
+
+            <div class="form-step" data-step="3"><h2>Identification and academic documents</h2><div class="row g-3">
+              <div class="col-md-4"><label class="form-label" for="passport_photo">Passport photograph</label><input class="form-control document-input" id="passport_photo" data-category="passport_photo" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"></div>
+              <div class="col-md-4"><label class="form-label" for="means_of_identification">Means of identification</label><input class="form-control document-input" id="means_of_identification" data-category="means_of_identification" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png"></div>
+              <div class="col-md-4"><label class="form-label" for="institutional_attestation">Institutional attestation</label><input class="form-control document-input" id="institutional_attestation" data-category="institutional_attestation" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></div>
+            </div><div id="identityDocumentStatus" class="small text-secondary mt-3"></div></div>
+            <div class="form-step" data-step="4"><h2>Project documents</h2><div class="row g-3">
+              <div class="col-md-6"><label class="form-label" for="full_project">Full project</label><input class="form-control document-input" id="full_project" data-category="full_project" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></div>
+              <div class="col-md-6"><label class="form-label" for="signed_certification">Signed certification page</label><input class="form-control document-input" id="signed_certification" data-category="signed_certification" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"></div>
+            </div><div id="projectDocumentStatus" class="small text-secondary mt-3"></div></div>
+
+            <div class="form-step" data-step="5"><h2>Supervisor information</h2><div class="row g-3">
+              <div class="col-md-3"><label class="form-label" for="supervisor_title">Title</label><input class="form-control" id="supervisor_title" name="supervisor_title" maxlength="24"></div>
+              <div class="col-md-5"><label class="form-label" for="supervisor_full_name">Full name</label><input class="form-control" id="supervisor_full_name" name="supervisor_full_name" maxlength="160" required></div>
+              <div class="col-md-4"><label class="form-label" for="supervisor_email">Email address</label><input class="form-control" id="supervisor_email" name="supervisor_email" type="email" maxlength="190" required></div>
+              <div class="col-md-4"><label class="form-label" for="supervisor_phone">Phone number</label><input class="form-control" id="supervisor_phone" name="supervisor_phone" type="tel" inputmode="numeric" minlength="11" maxlength="11" pattern="[0-9]{11}" title="Enter exactly 11 digits" required></div>
+            </div></div>
+
+            <div class="form-step" data-step="6"><h2>Head of Department information</h2><div class="row g-3">
+              <div class="col-md-3"><label class="form-label" for="hod_title">Title</label><input class="form-control" id="hod_title" name="hod_title" maxlength="24"></div>
+              <div class="col-md-5"><label class="form-label" for="hod_full_name">Full name</label><input class="form-control" id="hod_full_name" name="hod_full_name" maxlength="160" required></div>
+              <div class="col-md-4"><label class="form-label" for="hod_email">Email address</label><input class="form-control" id="hod_email" name="hod_email" type="email" maxlength="190" required></div>
+              <div class="col-md-4"><label class="form-label" for="hod_phone">Phone number</label><input class="form-control" id="hod_phone" name="hod_phone" type="tel" inputmode="numeric" minlength="11" maxlength="11" pattern="[0-9]{11}" title="Enter exactly 11 digits" required></div>
+            </div></div>
+
+            <div class="form-step" data-step="7"><h2>Review and final submission</h2><div class="review-grid" id="reviewGrid"></div><div class="form-check mt-4"><input class="form-check-input" type="checkbox" id="informationConfirmed" name="informationConfirmed" value="true"><label class="form-check-label" for="informationConfirmed">I confirm that all submitted information and documents are accurate.</label></div></div>
+
+            <div class="form-actions"><button class="btn btn-outline-secondary" type="button" id="previousButton"><i class="bi bi-arrow-left me-1"></i>Previous</button><div class="d-flex gap-2"><button class="btn btn-outline-primary" type="button" id="saveButton"><i class="bi bi-save me-1"></i>Save progress</button><button class="btn btn-primary d-none" type="button" id="submitApplication">Submit application</button><button class="btn btn-primary" type="button" id="nextButton">Next<i class="bi bi-arrow-right ms-1"></i></button></div></div>
+          </form>
+        </section>
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let csrfToken="",currentStep=0,correctionId=null,authorizedFields=[],authorizedDocumentCategories=[];
+      const titles=["Personal information","Next of kin","Academic information","Identification and academic documents","Project documents","Supervisor information","Head of Department information","Review and final submission"];
+      const programmeTypes={
+        Undergraduate:["B.Sc.","B.A.","B.Eng.","B.Tech.","B.Ed.","LL.B.","MBBS","B.Agric.","B.NSc.","B.Pharm.","B.Sc. (Ed.)","B.Sc. (Hons.)"],
+        Postgraduate:["PGD","M.Sc.","M.A.","MBA","M.Ed.","M.Eng.","LL.M.","MPH","M.Phil.","Ph.D.","DBA","Ed.D."],
+        Diploma:["ND","HND","Diploma in Computer Science","Diploma in Business Administration","Diploma in Education","Diploma in Public Administration","Diploma in Accounting","Diploma in Law","Diploma in Mass Communication","Diploma in Nursing","Professional Diploma","Ordinary Diploma","Advanced Diploma"]
+      };
+
+      function updateProgrammeTypes(selectedType=""){
+        const category=document.getElementById("programme_category").value;
+        const typeField=document.getElementById("programme_type");
+        const types=programmeTypes[category]||[];
+        typeField.replaceChildren(new Option(types.length?"Select programme type":"Select category first",""));
+        types.forEach(type=>typeField.add(new Option(type,type)));
+        if(selectedType&&!types.includes(selectedType))typeField.add(new Option(`Previously saved: ${selectedType}`,selectedType));
+        typeField.disabled=types.length===0;
+        if(selectedType&&!types.includes(selectedType))typeField.disabled=false;
+        if(types.includes(selectedType))typeField.value=selectedType;
+        else if(selectedType)typeField.value=selectedType;
+      }
+
+      document.getElementById("programme_category").addEventListener("change",()=>updateProgrammeTypes());
+
+      async function initialize(){
+        const csrfResponse=await fetch("/api/csrf-token",{credentials:"same-origin"});
+        if(!csrfResponse.ok){window.location.assign("/applicant/login");return;}
+        csrfToken=(await csrfResponse.json()).csrfToken;
+        const response=await fetch("/api/application",{credentials:"same-origin"});
+        if(response.status===401){window.location.assign("/applicant/login");return;}
+        if(response.status===403){document.getElementById("lockedAlert").classList.remove("d-none");return;}
+        if(!response.ok)throw new Error("Could not load application.");
+        const data=await response.json();
+        if(data.application){
+          if(data.application.status==="correction_required"){
+            const correctionsResponse=await fetch("/api/application/corrections",{credentials:"same-origin"});
+            if(!correctionsResponse.ok)throw new Error("Could not load the requested corrections.");
+            const correctionsData=await correctionsResponse.json();
+            const correction=correctionsData.corrections.find(item=>item.status==="open");
+            if(!correction)throw new Error("The requested correction is no longer open.");
+            correctionId=correction.id;
+            authorizedFields=correction.authorized_fields;
+            authorizedDocumentCategories=correction.authorized_document_categories;
+            const correctionAlert=document.getElementById("correctionAlert");
+            correctionAlert.textContent=`Correction requested: ${correction.reason} Only the requested information or documents can be changed.`;
+            correctionAlert.classList.remove("d-none");
+          }
+          const categoryField=document.getElementById("programme_category");
+          if(categoryField&&data.application.programme_category!==null){
+            if(!Array.from(categoryField.options).some(option=>option.value===data.application.programme_category)){
+              categoryField.add(new Option(`${data.application.programme_category} (previously saved)`,data.application.programme_category));
+            }
+            categoryField.value=data.application.programme_category;
+            updateProgrammeTypes(data.application.programme_type||"");
+          }
+          for(const [key,value] of Object.entries(data.application)){const field=document.getElementById(key);if(field&&field!==categoryField&&key!=="programme_type"&&value!==null)field.value=value;}
+          const dob=document.getElementById("dobDisplay");if(dob)dob.value=data.application.date_of_birth||"Populated from eligibility screening";
+          if(correctionId){
+            document.querySelectorAll("#applicationForm [name]").forEach(field=>{
+              if(field.type==="file")return;
+              field.disabled=!authorizedFields.includes(field.name);
+            });
+            document.querySelectorAll(".document-input").forEach(input=>{
+              input.disabled=!authorizedDocumentCategories.includes(input.dataset.category);
+            });
+            document.getElementById("submitApplication").textContent="Resubmit correction";
+            document.getElementById("informationConfirmed").disabled=true;
+            const requestedCategory=authorizedDocumentCategories[0];
+            const requestedStep=["passport_photo","means_of_identification","institutional_attestation"].includes(requestedCategory)?3:4;
+            showStep(authorizedDocumentCategories.length?requestedStep:7);
+          }
+        }else{
+          updateProgrammeTypes();
+          document.getElementById("dobDisplay").value="Populated after saving your eligibility screening";
+        }
+      }
+      function showStep(index){
+        currentStep=Math.max(0,Math.min(7,index));
+        document.queryAll?null:null;
+        document.querySelectorAll(".form-step").forEach(el=>el.classList.toggle("active",Number(el.dataset.step)===currentStep));
+        document.querySelectorAll(".step-item").forEach(el=>{const step=Number(el.dataset.step);el.classList.toggle("active",step===currentStep);el.classList.toggle("done",step<currentStep)});
+        document.getElementById("formTitle").textContent=titles[currentStep];
+        document.getElementById("previousButton").disabled=currentStep===0;
+        document.getElementById("nextButton").classList.toggle("d-none",currentStep===7);
+        document.getElementById("submitApplication").classList.toggle("d-none",currentStep!==7);
+        if(currentStep===7)buildReview();
+        window.scrollTo({top:0,behavior:"smooth"});
+      }
+      function buildReview(){
+        const names=["title","first_name","middle_name","surname","sex","marital_status","nin","nationality","country","state_of_origin","local_government_area","town_or_city","residential_address","email_address","phone_number","next_of_kin_full_name","next_of_kin_phone","next_of_kin_email","institution_name","faculty","department","programme_category","programme_type","matriculation_number","course_of_study","supervisor_full_name","supervisor_email","supervisor_phone","hod_full_name","hod_email","hod_phone"];
+        document.getElementById("reviewGrid").innerHTML=names.map(name=>{const field=document.getElementById(name);return `<div class="review-item"><span>${name.replaceAll("_"," ")}</span><strong>${escapeHtml(field?.value||"Not provided")}</strong></div>`}).join("");
+      }
+      function escapeHtml(value){const el=document.createElement("span");el.textContent=value==null?"":String(value);return el.innerHTML;}
+      async function saveProgress(){
+        const button=document.getElementById("saveButton");button.disabled=true;
+        const formData=new FormData(document.getElementById("applicationForm"));
+        const payload=correctionId
+          ? Object.fromEntries([...formData.entries()].filter(([name])=>authorizedFields.includes(name)))
+          : Object.fromEntries(formData.entries());
+        payload.csrfToken=csrfToken;
+        try{const response=await fetch("/api/application/save",{method:"POST",credentials:"same-origin",headers:{ "Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify(payload)});const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Could not save.");alert(data.message);return true;}
+        catch(error){alert(error.message);return false;}finally{button.disabled=false;}
+      }
+      document.getElementById("previousButton").addEventListener("click",()=>showStep(currentStep-1));
+      document.getElementById("nextButton").addEventListener("click",()=>{
+        const step=document.querySelector(`.form-step[data-step="${currentStep}"]`);
+        const required=[...step.querySelectorAll("[required]")];
+        const invalidField=required.find(field=>!field.checkValidity());
+        if(invalidField){required.forEach(field=>field.classList.toggle("is-invalid",!field.checkValidity()));invalidField.reportValidity();return;}
+        saveProgress().then(saved=>{if(saved)showStep(currentStep+1);});
+      });
+      document.getElementById("saveButton").addEventListener("click",saveProgress);
+      document.querySelectorAll(".document-input").forEach((input)=>{
+        input.addEventListener("change",async()=>{
+          if(!input.files[0])return;
+          const category=input.dataset.category;
+          const formData=new FormData();
+          formData.append("document",input.files[0]);
+          formData.append("csrfToken",csrfToken);
+          const status=document.querySelector(category==="passport_photo"||category==="means_of_identification"||category==="institutional_attestation"?"#identityDocumentStatus":"#projectDocumentStatus");
+          status.textContent="Uploading securely...";
+          try{
+            const response=await fetch(`/api/application/documents/${encodeURIComponent(category)}`,{method:"POST",credentials:"same-origin",headers:{ "X-CSRF-Token":csrfToken },body:formData});
+            const data=await response.json();
+            if(!response.ok)throw new Error(data.error?.message||"Document upload failed.");
+            status.textContent=data.message;
+          }catch(error){status.textContent=error.message;input.value="";}
+        });
+      });
+      document.getElementById("submitApplication").addEventListener("click",async()=>{
+        if(correctionId){
+          const button=document.getElementById("submitApplication");button.disabled=true;
+          try{
+            if(!await saveProgress())return;
+            const response=await fetch(`/api/application/corrections/${encodeURIComponent(correctionId)}/resubmit`,{
+              method:"POST",credentials:"same-origin",
+              headers:{"Content-Type":"application/json","X-CSRF-Token":csrfToken},
+              body:JSON.stringify({csrfToken})
+            });
+            const data=await response.json();
+            if(!response.ok)throw new Error(data.error?.message||"Could not resubmit the correction.");
+            alert(data.message);
+            window.location.assign("/applicant/dashboard");
+          }catch(error){alert(error.message);}finally{button.disabled=false;}
+          return;
+        }
+        if(!document.getElementById("informationConfirmed").checked){alert("Confirm that the submitted information is accurate.");return;}
+        const invalidNumber=document.querySelector('#applicationForm input[pattern="[0-9]{11}"]:invalid');
+        if(invalidNumber){
+          showStep(Number(invalidNumber.closest(".form-step").dataset.step));
+          invalidNumber.reportValidity();
+          return;
+        }
+        if(!confirm("Submit this application? It cannot be directly overwritten after final submission."))return;
+        const button=document.getElementById("submitApplication");button.disabled=true;
+        try{
+          if(!await saveProgress())return;
+          const response=await fetch("/api/application/submit",{method:"POST",credentials:"same-origin",headers:{ "Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify({informationConfirmed:"true",csrfToken})});
+          const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Could not submit.");
+          document.querySelector(".form-panel").innerHTML=`<div class="p-5 text-center"><i class="bi bi-check-circle-fill text-success" style="font-size:48px"></i><h1 class="h3 mt-3" style="color:var(--navy)">Application submitted</h1><p class="text-secondary">${escapeHtml(data.applicationReference)}</p><a class="btn btn-primary" href="/applicant/dashboard">Return to dashboard</a></div>`;
+        }catch(error){alert(error.message);}finally{button.disabled=false;}
+      });
+      initialize().catch(error=>alert(error.message));
+    </script>
+  </body>
+</html>

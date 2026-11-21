@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Audit Logs & System Settings | NERD Clearance Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../assets/css/public.css" rel="stylesheet">
+    <style>
+      body{min-width:320px;background:#f2f5f9}.system-page{width:min(100%,1180px);margin:auto;padding:32px 20px}.system-top{min-height:72px;background:var(--navy)}
+      .system-top>.container{gap:12px}.system-top .navbar-brand{min-width:0}.system-top .brand-copy{min-width:0}.system-top .brand-copy strong{overflow-wrap:anywhere}
+      .panel{min-width:0;border:1px solid var(--border);border-radius:14px;background:white}.panel-header{padding:18px 20px;border-bottom:1px solid var(--border)}
+      .nav-tabs{flex-wrap:nowrap;overflow-x:auto;padding:0 20px;scrollbar-width:thin}.nav-tabs .nav-item{flex:0 0 auto}.nav-tabs .nav-link{white-space:nowrap;border:0;color:var(--muted);font-weight:700}.nav-tabs .nav-link.active{border-bottom:3px solid var(--gold);color:var(--navy)}
+      .table-wrap{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch}.table{min-width:900px}.table td,.table th{font-size:13px}.setting-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+      .setting-grid>div{min-width:0}.setting-grid .form-control,.setting-grid .form-select{width:100%;min-width:0}
+      @media(max-width:767px){.system-page{padding:20px 12px}.setting-grid{grid-template-columns:1fr}.tab-pane{padding:12px!important}.nav-tabs{padding:0 12px}.panel-header{padding:16px}}
+      @media(max-width:575px){
+        .system-top{min-height:64px}.system-top>.container{padding-right:12px;padding-left:12px}.system-top .brand-mark{width:38px;height:38px;flex:0 0 38px}.system-top .brand-copy strong{font-size:10px;line-height:1.2}.system-top .brand-copy small{font-size:9px;letter-spacing:1px}
+        .system-top .btn{flex:0 0 auto}.system-page{padding:14px 8px}.panel{border-radius:10px}.panel-header h1{font-size:1.1rem}
+        #smtpSenderForm .btn,#settingsForm>.d-flex .btn{width:100%}#smtpSenderForm .d-flex,#settingsForm>.d-flex{display:block!important}
+        #auditFilter>div{width:100%}#auditFilter .btn{width:100%}#auditPrevious,#auditNext{min-width:76px}
+        .alert{overflow-wrap:anywhere}.setting-grid{gap:12px}
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar system-top navbar-dark"><div class="container"><a class="navbar-brand d-flex align-items-center" href="/admin/dashboard"><span class="brand-mark">OJ</span><span class="brand-copy"><strong>OGAH JOHN BUSINESS CENTER</strong><small>UDUS MINI MART</small></span></a><a class="btn btn-outline-light btn-sm" href="/admin/dashboard">Dashboard</a></div></nav>
+    <main class="system-page">
+      <div class="panel">
+        <div class="panel-header"><span class="section-kicker">System administration</span><h1 class="h4 mt-1 mb-0">Audit logs and settings</h1></div>
+        <ul class="nav nav-tabs mt-3" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#auditTab" type="button">Audit logs</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#settingsTab" type="button">System settings</button></li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane fade show active p-3" id="auditTab">
+            <form class="row g-2 mb-3" id="auditFilter">
+              <div class="col-md-3"><input class="form-control" name="action" placeholder="Search action"></div>
+              <div class="col-md-2"><input class="form-control" name="recordType" placeholder="Record type"></div>
+              <div class="col-md-2"><input class="form-control" name="recordId" type="number" min="1" placeholder="Record ID"></div>
+              <div class="col-md-2"><input class="form-control" name="from" type="date"></div>
+              <div class="col-md-2"><input class="form-control" name="to" type="date"></div>
+              <div class="col-md-1 d-grid"><button class="btn btn-primary" type="submit">Search</button></div>
+            </form>
+            <div class="table-wrap"><table class="table mb-0"><thead><tr><th>Time</th><th>User</th><th>Action</th><th>Record</th><th>IP address</th></tr></thead><tbody id="auditRows"><tr><td colspan="5" class="text-center py-5 text-secondary">Loading audit logs...</td></tr></tbody></table></div>
+            <div class="d-flex justify-content-between align-items-center p-3"><button class="btn btn-outline-secondary btn-sm" id="auditPrevious" type="button">Previous</button><span class="small text-secondary" id="auditPage"></span><button class="btn btn-outline-secondary btn-sm" id="auditNext" type="button">Next</button></div>
+          </div>
+          <div class="tab-pane fade p-3" id="settingsTab">
+            <div class="alert alert-light border mb-3"><strong>Email delivery:</strong> <span id="smtpStatus">Checking configuration...</span></div>
+            <section class="border rounded-3 p-3 mb-4" aria-labelledby="smtpSenderHeading">
+              <h2 class="h5" id="smtpSenderHeading">Outgoing email sender</h2>
+              <p class="small text-secondary">Change the authenticated mailbox used to send portal email. Enter that mailbox’s SMTP credentials; the portal verifies them before saving. Credentials are encrypted in the database and never shown again.</p>
+              <form id="smtpSenderForm" autocomplete="off">
+                <div class="setting-grid">
+                  <div><label class="form-label" for="smtpFromEmail">Sender email address</label><input class="form-control" id="smtpFromEmail" name="fromEmail" type="email" autocomplete="email" required maxlength="254"></div>
+                  <div><label class="form-label" for="smtpHost">SMTP server host</label><input class="form-control" id="smtpHost" name="host" type="text" autocomplete="off" required maxlength="253"></div>
+                  <div><label class="form-label" for="smtpPort">SMTP port</label><input class="form-control" id="smtpPort" name="port" type="number" min="1" max="65535" required></div>
+                  <div><label class="form-label" for="smtpSecure">Connection security</label><select class="form-select" id="smtpSecure" name="secure"><option value="true">Implicit TLS (usually port 465)</option><option value="false">STARTTLS (usually port 587)</option></select></div>
+                  <div><label class="form-label" for="smtpUser">SMTP username</label><input class="form-control" id="smtpUser" name="user" type="text" autocomplete="username" required maxlength="254"></div>
+                  <div><label class="form-label" for="smtpPassword">SMTP password or App Password</label><input class="form-control" id="smtpPassword" name="password" type="password" autocomplete="new-password" required maxlength="512"></div>
+                </div>
+                <div class="d-flex justify-content-end mt-3"><button class="btn btn-outline-primary" type="submit">Verify and save sender</button></div>
+              </form>
+            </section>
+            <div class="alert alert-info py-2 mb-3">
+              <strong>Payment notification email</strong> receives alerts for new payment submissions.
+              Changes apply to new submissions; emails already queued keep their original recipient.
+            </div>
+            <form id="settingsForm">
+              <div class="setting-grid" id="settingsGrid"></div>
+              <div class="d-flex justify-content-end mt-3"><button class="btn btn-primary" type="submit">Save settings</button></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let csrfToken="",auditPage=1,auditFilters={},settings=[];
+      function escapeHtml(value){const el=document.createElement("span");el.textContent=value==null?"":String(value);return el.innerHTML;}
+      async function initialize(){
+        const csrfResponse=await fetch("/api/csrf-token",{credentials:"same-origin"});
+        if(!csrfResponse.ok){window.location.assign("/applicant/login");return;}
+        csrfToken=(await csrfResponse.json()).csrfToken;
+        await loadAuditLogs();await loadSettings();
+      }
+      async function loadAuditLogs(){
+        const params=new URLSearchParams(auditFilters);params.set("page",String(auditPage));params.set("limit","25");
+        const response=await fetch(`/api/admin/audit-logs?${params}`,{credentials:"same-origin"});
+        if(!response.ok){const data=await response.json();throw new Error(data.error?.message||"Could not load audit logs.");}
+        const data=await response.json();
+        document.getElementById("auditRows").innerHTML=data.logs.length?data.logs.map(log=>`
+          <tr><td>${new Date(log.created_at).toLocaleString()}</td><td><strong>${escapeHtml(log.full_name||"System")}</strong><br><span class="text-secondary">${escapeHtml(log.email||"")}</span></td><td>${escapeHtml(log.action)}</td><td>${escapeHtml(log.record_type||"—")} ${log.record_id?`#${log.record_id}`:""}</td><td>${escapeHtml(log.ip_address||"—")}</td></tr>`).join(""):`<tr><td colspan="5" class="text-center py-5 text-secondary">No audit records match this filter.</td></tr>`;
+        document.getElementById("auditPage").textContent=`Page ${data.pagination.page} of ${data.pagination.pages||1}`;
+        document.getElementById("auditPrevious").disabled=auditPage<=1;
+        document.getElementById("auditNext").disabled=auditPage>=data.pagination.pages;
+      }
+      async function loadSettings(){
+        const response=await fetch("/api/admin/settings",{credentials:"same-origin"});
+        if(!response.ok)throw new Error("Could not load settings.");
+        const data=await response.json();
+        settings=data.settings.filter(setting=>["business_name","admin_notification_email","registration_available","application_reference_format"].includes(setting.key));
+        document.getElementById("smtpStatus").textContent=data.smtpConfigured?"Configured":"Not configured";
+        const smtpSender=data.smtpSender;
+        if(smtpSender){
+          document.getElementById("smtpFromEmail").value=smtpSender.fromEmail||"";
+          document.getElementById("smtpHost").value=smtpSender.host||"";
+          document.getElementById("smtpPort").value=smtpSender.port||"";
+          document.getElementById("smtpSecure").value=String(Boolean(smtpSender.secure));
+          document.getElementById("smtpUser").value=smtpSender.user||"";
+        }
+        document.getElementById("settingsGrid").innerHTML=settings.map(setting=>{
+          const label=setting.key==="admin_notification_email"
+            ?"Payment notification email"
+            :setting.key.replaceAll("_"," ").replace(/\b\w/g,character=>character.toUpper());
+          if(setting.key==="registration_available"){
+            return `<div><label class="form-label">${label}</label><select class="form-select" data-setting="${setting.key}"><option value="true" ${setting.value==="true"?"selected":""}>Enabled</option><option value="false" ${setting.value==="false"?"selected":""}>Disabled</option></select></div>`;
+          }
+          if(setting.key==="admin_notification_email"){
+            return `<div><label class="form-label" for="paymentNotificationEmail">${label}</label><input class="form-control" id="paymentNotificationEmail" type="email" autocomplete="email" required data-setting="${setting.key}" value="${escapeHtml(setting.value)}" maxlength="254"></div>`;
+          }
+          return `<div><label class="form-label">${label}</label><input class="form-control" data-setting="${setting.key}" value="${escapeHtml(setting.value)}" maxlength="1000"></div>`;
+        }).join("");
+      }
+      document.getElementById("auditFilter").addEventListener("submit",async(event)=>{event.preventDefault();auditFilters=Object.fromEntries([...new FormData(event.currentTarget).entries()].filter(([,value])=>value));auditPage=1;try{await loadAuditLogs()}catch(error){alert(error.message)}});
+      document.getElementById("auditPrevious").addEventListener("click",()=>{auditPage--;loadAuditLogs().catch(error=>alert(error.message));});
+      document.getElementById("auditNext").addEventListener("click",()=>{auditPage++;loadAuditLogs().catch(error=>alert(error.message));});
+      document.getElementById("settingsForm").addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        if(!event.currentTarget.reportValidity())return;
+        const values=[...event.currentTarget.querySelectorAll("[data-setting]")].map(field=>({key:field.dataset.setting,value:field.value}));
+        try{
+          const response=await fetch("/api/admin/settings",{method:"PUT",credentials:"same-origin",headers:{ "Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify({settings:values,csrfToken})});
+          const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Could not save settings.");
+          alert(data.message);await loadSettings();
+        }catch(error){alert(error.message);}
+      });
+      document.getElementById("smtpSenderForm").addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        if(!event.currentTarget.reportValidity())return;
+        const form=event.currentTarget;
+        const button=form.querySelector('button[type="submit"]');
+        const values=Object.fromEntries(new FormData(form).entries());
+        values.port=Number(values.port);
+        values.secure=values.secure==="true";
+        button.disabled=true;
+        try{
+          const response=await fetch("/api/admin/settings/smtp-sender",{method:"POST",credentials:"same-origin",headers:{ "Content-Type":"application/json","X-CSRF-Token":csrfToken},body:JSON.stringify({smtp:values,csrfToken})});
+          const data=await response.json();if(!response.ok)throw new Error(data.error?.message||"Could not update the email sender.");
+          form.elements.password.value="";
+          alert(data.message);
+          await loadSettings();
+        }catch(error){alert(error.message);}
+        finally{button.disabled=false;}
+      });
+      initialize().catch(error=>alert(error.message));
+    </script>
+  </body>
+</html>

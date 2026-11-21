@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administrator Dashboard | NERD Clearance Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../assets/css/public.css" rel="stylesheet">
+    <style>
+      body { background:#f1f5f9; }
+      .admin-shell { display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh; }
+      .admin-sidebar { position:sticky;top:0;height:100vh;padding:24px 16px;background:var(--navy);color:white;overflow:auto; }
+      .admin-sidebar .navbar-brand { margin:0 8px 28px; }
+      .admin-menu { list-style:none;margin:0;padding:0; }
+      .admin-menu a { display:flex;align-items:center;gap:10px;margin:4px 0;padding:11px 12px;border-radius:8px;color:rgba(255,255,255,.72);text-decoration:none;font-size:14px; }
+      .admin-menu a:hover,.admin-menu a.active { background:rgba(255,255,255,.08);color:var(--gold); }
+      .admin-main { min-width:0; }
+      .admin-topbar { display:flex;align-items:center;justify-content:space-between;height:72px;padding:0 28px;border-bottom:1px solid var(--border);background:white; }
+      .admin-content { padding:28px; }
+      .admin-content section[id] { scroll-margin-top:20px; }
+      .stat-grid { display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px;margin-bottom:24px; }
+      .stat-card { border:1px solid var(--border);border-radius:12px;padding:18px;background:white; }
+      .stat-card span { color:var(--muted);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px; }
+      .stat-card strong { display:block;margin-top:7px;color:var(--navy);font-size:29px;line-height:1; }
+      .panel { border:1px solid var(--border);border-radius:14px;background:white;overflow:hidden; }
+      .panel-header { display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border); }
+      .panel-header h2 { margin:0;color:var(--navy);font-size:18px; }
+      .table-wrap { overflow:auto; }
+      .table { margin:0;min-width:980px; }
+      .table th { border-bottom:1px solid var(--border);background:#f8fafc;color:#68758a;font-size:12px;text-transform:uppercase;letter-spacing:.35px; }
+      .table td { vertical-align:middle;font-size:13px;border-color:#edf1f5; }
+      .status-badge { display:inline-block;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800;text-transform:capitalize; }
+      .status-pending_verification { background:#fff3d6;color:#8a641e; }
+      .status-under_review { background:#e9effa;color:#355c94; }
+      .status-approved { background:#e6f5ed;color:#28704f; }
+      .status-rejected { background:#faeaea;color:#9b4141; }
+      .status-correction_required { background:#f1ecfa;color:#65518a; }
+      .duplicate-badge { display:inline-block;margin-left:6px;border-radius:4px;padding:3px 5px;background:#fff0d1;color:#8a641e;font-size:10px;font-weight:800; }
+      .action-bar { display:flex;gap:6px; }
+      .action-bar .btn { min-width:34px; }
+      .mobile-menu { display:none; }
+      .modal-content { border:0;border-radius:14px; }
+      .modal-header { border-bottom:1px solid var(--border); }
+      .modal-footer { border-top:1px solid var(--border); }
+      @media(max-width:991px){
+        .admin-shell{grid-template-columns:1fr}.admin-sidebar{position:fixed;z-index:1040;left:-248px;width:248px;transition:left .18s ease}.admin-sidebar.open{left:0}.mobile-menu{display:inline-grid}.stat-grid{grid-template-columns:repeat(2,minmax(140px,1fr))}
+      }
+      @media(max-width:575px){.admin-content{padding:16px}.stat-grid{grid-template-columns:1fr 1fr}.admin-topbar{padding:0 16px}}
+    </style>
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar" id="adminSidebar">
+        <a class="navbar-brand d-flex align-items-center" href="/"><span class="brand-mark">OJ</span><span class="brand-copy"><strong>OGAH JOHN BUSINESS CENTER</strong><small>UDUS MINI MART</small></span></a>
+        <ul class="admin-menu">
+          <li><a class="active" href="#overview"><i class="bi bi-grid"></i>Overview</a></li>
+          <li><a href="#applicants"><i class="bi bi-people"></i>Applicants</a></li>
+          <li><a href="#restricted-cases"><i class="bi bi-shield-exclamation"></i>Restricted cases</a></li>
+          <li><a href="#payments"><i class="bi bi-credit-card"></i>Payments</a></li>
+          <li><a href="/admin/applications"><i class="bi bi-file-earmark-text"></i>Applications</a></li>
+          <li><a href="#clearances"><i class="bi bi-award"></i>Clearances</a></li>
+          <li><a href="/admin/staff-dashboard"><i class="bi bi-person-gear"></i>Staff & permissions</a></li>
+          <li><a href="/admin/reports"><i class="bi bi-bar-chart"></i>Reports</a></li>
+          <li><a href="/admin/system"><i class="bi bi-journal-text"></i>Audit logs & settings</a></li>
+        </ul>
+      </aside>
+      <main class="admin-main">
+        <header class="admin-topbar">
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary mobile-menu" id="menuButton" type="button"><i class="bi bi-list"></i></button>
+            <strong id="adminName">Administrator</strong>
+          </div>
+          <button class="btn btn-outline-secondary btn-sm" id="logoutButton" type="button"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
+        </header>
+        <div class="admin-content">
+          <section id="overview">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <div><span class="section-kicker">Administration</span><h1 class="h3 mt-1 mb-0">Dashboard overview</h1></div>
+              <span class="text-secondary small" id="updatedTime"></span>
+            </div>
+            <div class="stat-grid" id="statGrid"></div>
+          </section>
+
+          <section class="panel mb-4" id="applicants">
+            <div class="panel-header">
+              <h2>Applicant directory</h2>
+              <form class="d-flex gap-2" id="applicantSearchForm">
+                <input class="form-control form-control-sm" id="applicantSearch" type="search" placeholder="Search applicants" aria-label="Search applicants">
+                <button class="btn btn-outline-primary btn-sm" type="submit">Search</button>
+              </form>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Applicant</th><th>Phone</th><th>Institution</th><th>Eligibility</th><th>Payment</th><th>Application</th><th>Registered</th></tr></thead>
+                <tbody id="applicantRows"><tr><td colspan="7" class="text-center py-5 text-secondary">Loading applicants...</td></tr></tbody>
+              </table>
+            </div>
+            <div class="px-3 py-2 border-top small text-secondary" id="applicantCount"></div>
+          </section>
+
+          <section class="panel mb-4" id="restricted-cases">
+            <div class="panel-header">
+              <h2>Exemption & exclusion review <span class="badge text-bg-warning ms-1" id="restrictedCaseCount">0</span></h2>
+              <select class="form-select form-select-sm" id="restrictedCaseFilter" style="width:auto" aria-label="Restricted case status">
+                <option value="pending">Pending review</option>
+                <option value="all">All cases</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Applicant</th><th>Contact</th><th>Reason</th><th>Nationality</th><th>Study mode</th><th>Age at graduation</th><th>Submitted</th><th>Category</th><th>Action</th></tr></thead>
+                <tbody id="restrictedCaseRows"><tr><td colspan="9" class="text-center py-5 text-secondary">Loading restricted cases...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel mb-4" id="clearances">
+            <div class="panel-header">
+              <h2>Final clearance management</h2>
+              <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#clearanceModal">
+                <i class="bi bi-upload me-1"></i>Upload clearance
+              </button>
+            </div>
+            <div class="p-3 text-secondary small" id="clearanceList">Clearances load when an applicant record is selected.</div>
+          </section>
+
+          <section class="panel" id="payments">
+            <div class="panel-header">
+              <h2>Payment verification</h2>
+              <select class="form-select form-select-sm" id="paymentFilter" style="width:auto">
+                <option value="">All statuses</option>
+                <option value="pending_verification">Pending verification</option>
+                <option value="under_review">Under review</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="correction_required">Correction required</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th>Applicant</th><th>Reference</th><th>Amount</th><th>Channel</th><th>Transaction</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
+                <tbody id="paymentRows"><tr><td colspan="8" class="text-center py-5 text-secondary">Loading payment claims...</td></tr></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal fade" id="clearanceModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="clearanceForm">
+            <div class="modal-header"><h2 class="modal-title fs-5">Upload final clearance PDF</h2><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+              <label class="form-label" for="clearanceApplicationId">Applicant application</label>
+              <select class="form-select mb-3" id="clearanceApplicationId" required>
+                <option value="">Select a submitted application</option>
+              </select>
+              <label class="form-label" for="clearanceFile">Original clearance PDF</label>
+              <input class="form-control" id="clearanceFile" type="file" accept=".pdf,application/pdf" required>
+              <p class="small text-secondary mt-2 mb-0">The original PDF will be stored unchanged and replacement history will be preserved.</p>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary" id="clearanceSubmit">Upload clearance</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form id="actionForm">
+            <div class="modal-header"><h2 class="modal-title fs-5" id="actionTitle">Payment action</h2><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+              <input type="hidden" id="actionPaymentId">
+              <input type="hidden" id="actionType">
+              <p id="actionSummary" class="text-secondary"></p>
+              <label class="form-label" for="actionReason">Reason or internal note <span class="text-secondary">(optional for approval)</span></label>
+              <textarea class="form-control" id="actionReason" rows="4" maxlength="2000"></textarea>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary" id="confirmAction">Confirm</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header"><h2 class="modal-title fs-5">Payment receipt</h2><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+          <div class="modal-body p-0" style="height:70vh"><iframe id="receiptFrame" title="Payment receipt preview" style="width:100%;height:100%;border:0"></iframe></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      let csrfToken = "";
+      const statLabels = [
+        ["totalApplicants","Total applicants"],["eligibleApplicants","Eligible"],["pendingPayments","Pending payments"],
+        ["approvedPayments","Approved payments"],["rejectedPayments","Rejected payments"],["applicationsSubmitted","Submitted applications"],
+        ["applicationsUnderReview","Applications under review"],["clearancesUploaded","Clearances uploaded"]
+      ];
+
+      async function initialize() {
+        const sessionResponse = await fetch("/api/session",{credentials:"same-origin"});
+        if (!sessionResponse.ok) { window.location.assign("/applicant/login"); return; }
+        const sessionData = await sessionResponse.json();
+        if (sessionData.user.role !== "administrator") { window.location.assign("/applicant/dashboard"); return; }
+        document.getElementById("adminName").textContent=sessionData.user.fullName;
+
+        const csrfResponse=await fetch("/api/csrf-token",{credentials:"same-origin"});
+        const csrf=await csrfResponse.json(); csrfToken=csrf.csrfToken;
+        await loadStats();
+        await loadApplicants();
+        await loadRestrictedCases();
+        await loadPayments();
+      }
+
+      async function loadStats() {
+        const response=await fetch("/api/admin/stats",{credentials:"same-origin"});
+        if (!response.ok) throw new Error("Could not load dashboard statistics.");
+        const data=await response.json();
+        document.getElementById("statGrid").innerHTML=statLabels.map(([key,label])=>`
+          <article class="stat-card"><span>${label}</span><strong>${data.stats[key] || 0}</strong></article>
+        `).join("");
+        document.getElementById("updatedTime").textContent=`Updated ${new Date().toLocaleTimeString()}`;
+      }
+
+      async function loadPayments() {
+        const status=document.getElementById("paymentFilter").value;
+        const response=await fetch(`/api/admin/payments${status ? `?status=${encodeURIComponent(status)}` : ""}`,{credentials:"same-origin"});
+        if (!response.ok) throw new Error("Could not load payment claims.");
+        const data=await response.json();
+        document.getElementById("paymentRows").innerHTML=data.payments.length ? data.payments.map((payment)=>`
+          <tr>
+            <td><strong>${escapeHtml(payment.full_name)}</strong><br><span class="text-secondary">${escapeHtml(payment.email)}</span></td>
+            <td>${escapeHtml(payment.applicant_reference)}</td>
+            <td><strong>N${Number(payment.amount_submitted).toLocaleString("en-NG")}</strong><br><span class="text-secondary">Expected N${Number(payment.amount_expected).toLocaleString("en-NG")}</span></td>
+            <td>${payment.channel === "palmpay" ? "PalmPay" : "Access Bank"}</td>
+            <td>${escapeHtml(payment.transaction_reference)}${payment.duplicate_flag ? '<span class="duplicate-badge" title="Potential duplicate receipt">Duplicate</span>' : ""}</td>
+            <td><span class="status-badge status-${payment.status}">${payment.status.replaceAll("_"," ")}</span></td>
+            <td>${new Date(payment.submitted_at).toLocaleString()}</td>
+            <td><div class="action-bar">
+              ${payment.receipt_document_id ? `<button class="btn btn-outline-secondary btn-sm" type="button" onclick="previewReceipt(${payment.id})" title="Preview receipt"><i class="bi bi-eye"></i></button>` : ""}
+              ${payment.status !== "approved" ? `<button class="btn btn-success btn-sm" type="button" onclick="openAction(${payment.id},'approve','${escapeJs(payment.full_name)}')" title="Approve"><i class="bi bi-check-lg"></i></button>` : ""}
+              ${payment.status !== "rejected" ? `<button class="btn btn-danger btn-sm" type="button" onclick="openAction(${payment.id},'reject','${escapeJs(payment.full_name)}')" title="Reject"><i class="bi bi-x-lg"></i></button>` : ""}
+              ${payment.status !== "correction_required" ? `<button class="btn btn-outline-primary btn-sm" type="button" onclick="openAction(${payment.id},'correction_required','${escapeJs(payment.full_name)}')" title="Request correction"><i class="bi bi-pencil"></i></button>` : ""}
+            </div></td>
+          </tr>
+        `).join("") : '<tr><td colspan="8" class="text-center py-5 text-secondary">No payment claims match this filter.</td></tr>';
+      }
+
+      function escapeHtml(value){const el=document.createElement("span");el.textContent=value==null?"":String(value);return el.innerHTML;}
+      function escapeJs(value){return String(value).replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/\r|\n/g," ");}
+
+      async function loadRestrictedCases() {
+        const status=document.getElementById("restrictedCaseFilter").value;
+        const response=await fetch(`/api/admin/restricted-cases?status=${encodeURIComponent(status)}`,{credentials:"same-origin"});
+        if(!response.ok)throw new Error("Could not load restricted-category cases.");
+        const data=await response.json();
+        const pending=data.cases.filter(item=>item.status==="pending").length;
+        document.getElementById("restrictedCaseCount").textContent=pending;
+        document.getElementById("restrictedCaseRows").innerHTML=data.cases.length?data.cases.map(item=>{
+          const reason=item.case_reason==="noun"?"NOUN — administrator classification required":
+            item.case_reason==="nigerian_part_time"?"Nigerian part-time — Exclusion":
+            "Full-time over 30 — Exemption";
+          const isPending=item.status==="pending";
+          return `<tr>
+            <td><strong>${escapeHtml(item.full_name)}</strong></td>
+            <td>${escapeHtml(item.email)}<br><span class="text-secondary">${escapeHtml(item.phone)}</span></td>
+            <td>${escapeHtml(reason)}<br><span class="text-secondary">${escapeHtml(item.institution_name)}</span></td>
+            <td>${escapeHtml(item.nationality)}</td>
+            <td>${item.study_mode==="part_time"?"Part-Time":"Full-Time"}</td>
+            <td>${escapeHtml(item.age_at_graduation)}</td>
+            <td>${new Date(item.created_at).toLocaleString()}</td>
+            <td>${isPending?`<select class="form-select form-select-sm" id="restrictedCategory-${item.id}" aria-label="Restricted category for ${escapeHtml(item.full_name)}" ${item.suggested_category?"disabled":""}>
+              <option value="">Choose category</option>
+              <option value="exemption" ${item.suggested_category==="exemption"?"selected":""}>Exemption</option>
+              <option value="exclusion" ${item.suggested_category==="exclusion"?"selected":""}>Exclusion</option>
+            </select>`:escapeHtml(item.category||"—")}</td>
+            <td>${isPending?`<div class="d-flex gap-1">
+              <button class="btn btn-success btn-sm" type="button" onclick="reviewRestrictedCase(${item.id},'approve')">Approve</button>
+              <button class="btn btn-outline-danger btn-sm" type="button" onclick="reviewRestrictedCase(${item.id},'reject')">Reject</button>
+            </div>`:escapeHtml(item.status)}</td>
+          </tr>`;
+        }).join(""):'<tr><td colspan="9" class="text-center py-5 text-secondary">No restricted cases to display.</td></tr>';
+      }
+
+      async function reviewRestrictedCase(requestId,action){
+        const categoryField=document.getElementById(`restrictedCategory-${requestId}`);
+        const category=categoryField?.value||"";
+        if(action==="approve"&&!category){alert("Choose Exemption or Exclusion before approving.");return;}
+        try{
+          const response=await fetch(`/api/admin/restricted-cases/${requestId}/action`,{
+            method:"POST",credentials:"same-origin",
+            headers:{"Content-Type":"application/json","X-CSRF-Token":csrfToken},
+            body:JSON.stringify({action,category,csrfToken})
+          });
+          const data=await response.json();
+          if(!response.ok)throw new Error(data.error?.message||"Could not update restricted case.");
+          await loadRestrictedCases();
+          await loadStats();
+          alert(data.message);
+        }catch(error){alert(error.message);}
+      }
+
+      document.getElementById("restrictedCaseFilter").addEventListener("change",()=>loadRestrictedCases().catch(error=>alert(error.message)));
+
+      async function loadApplicants() {
+        const search=document.getElementById("applicantSearch").value.trim();
+        const query=new URLSearchParams({limit:"100"});
+        if(search)query.set("search",search);
+        const response=await fetch(`/api/admin/applicants?${query}`,{credentials:"same-origin"});
+        if(!response.ok)throw new Error("Could not load applicants.");
+        const data=await response.json();
+        document.getElementById("applicantRows").innerHTML=data.applicants.length?data.applicants.map(applicant=>`
+          <tr>
+            <td><strong>${escapeHtml(applicant.full_name)}</strong><br><span class="text-secondary">${escapeHtml(applicant.email)}</span></td>
+            <td>${escapeHtml(applicant.phone)}</td>
+            <td>${escapeHtml(applicant.institution_name||"Not provided")}</td>
+            <td>${applicant.is_eligible==null?"Not screened":applicant.is_eligible?"Eligible":"Not eligible"}</td>
+            <td>${escapeHtml((applicant.payment_status||"Not paid").replaceAll("_"," "))}</td>
+            <td>${escapeHtml((applicant.application_status||"Not started").replaceAll("_"," "))}</td>
+            <td>${new Date(applicant.created_at).toLocaleDateString()}</td>
+          </tr>
+        `).join(""):'<tr><td colspan="7" class="text-center py-5 text-secondary">No applicants match this search.</td></tr>';
+        const shown=data.applicants.length;
+        document.getElementById("applicantCount").textContent=`Showing ${shown} of ${data.pagination.total} applicant${data.pagination.total===1?"":"s"}.`;
+      }
+
+      document.getElementById("applicantSearchForm").addEventListener("submit",event=>{
+        event.preventDefault();
+        loadApplicants().catch(error=>alert(error.message));
+      });
+      document.querySelectorAll(".admin-menu a[href^='#']").forEach(link=>link.addEventListener("click",event=>{
+        const target=document.querySelector(link.getAttribute("href"));
+        if(!target)return;
+        event.preventDefault();
+        target.scrollIntoView({behavior:"smooth",block:"start"});
+        history.replaceState(null,"",link.getAttribute("href"));
+        document.querySelectorAll(".admin-menu a").forEach(item=>item.classList.toggle("active",item===link));
+        document.getElementById("adminSidebar").classList.remove("open");
+      }));
+
+      function previewReceipt(paymentId){
+        document.getElementById("receiptFrame").src=`/api/admin/payments/${paymentId}/receipt`;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("receiptModal")).show();
+      }
+
+      function openAction(paymentId,action,name){
+        document.getElementById("actionPaymentId").value=paymentId;
+        document.getElementById("actionType").value=action;
+        document.getElementById("actionTitle").textContent=action==="approve"?"Approve payment":action==="reject"?"Reject payment":"Request payment correction";
+        document.getElementById("actionSummary").textContent=`Confirm this action for ${name}. The payment status and audit trail will be updated.`;
+        document.getElementById("actionReason").value="";
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("actionModal")).show();
+      }
+
+      document.getElementById("actionForm").addEventListener("submit",async(event)=>{
+        event.preventDefault();
+        const paymentId=document.getElementById("actionPaymentId").value;
+        const action=document.getElementById("actionType").value;
+        const reason=document.getElementById("actionReason").value;
+        const button=document.getElementById("confirmAction");
+        button.disabled=true;
+        try{
+          const response=await fetch(`/api/admin/payments/${paymentId}/action`,{
+            method:"POST",credentials:"same-origin",
+            headers:{ "Content-Type":"application/json","X-CSRF-Token":csrfToken },
+            body:JSON.stringify({action,reason,csrfToken})
+          });
+          const data=await response.json();
+          if(!response.ok) throw new Error(data.error?.message || "Action failed.");
+          bootstrap.Modal.getInstance(document.getElementById("actionModal")).hide();
+          await loadStats(); await loadPayments();
+        }catch(error){alert(error.message);}
+        finally{button.disabled=false;}
+      });
+
+      document.getElementById("paymentFilter").addEventListener("change",()=>loadPayments().catch(error=>alert(error.message)));
+      document.getElementById("menuButton").addEventListener("click",()=>document.getElementById("adminSidebar").classList.toggle("open"));
+      document.getElementById("logoutButton").addEventListener("click",async()=>{
+        const response=await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin",headers:{ "Content-Type":"application/json","X-CSRF-Token":csrfToken },body:JSON.stringify({csrfToken})});
+        const data=await response.json(); if(response.ok) window.location.assign(data.redirect);
+      });
+
+      async function loadClearances() {
+        const response = await fetch("/api/admin/clearances", { credentials: "same-origin" });
+        if (!response.ok) return;
+        const data = await response.json();
+        document.getElementById("clearanceList").innerHTML = data.clearances.length
+          ? data.clearances.map((item) => `
+              <div class="border-bottom py-2">
+                <strong>${escapeHtml(item.full_name)}</strong>
+                — ${escapeHtml(item.application_reference)}
+                <span class="text-secondary">uploaded ${new Date(item.uploaded_at).toLocaleString()}</span>
+              </div>`).join("")
+          : "No final clearances uploaded.";
+      }
+
+      async function loadClearanceCandidates() {
+        const select = document.getElementById("clearanceApplicationId");
+        select.innerHTML = '<option value="">Loading submitted applications...</option>';
+        const response = await fetch("/api/admin/clearance-candidates", { credentials: "same-origin" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "Could not load submitted applications.");
+        const candidates = data.applications;
+        select.innerHTML = '<option value="">Select a submitted application</option>' + candidates.map((application) => {
+          const applicantName = [application.first_name, application.middle_name, application.surname].filter(Boolean).join(" ") || application.full_name;
+          return `<option value="${Number(application.id)}">${escapeHtml(application.application_reference)} — ${escapeHtml(applicantName)} (${escapeHtml(application.status.replaceAll("_", " "))})</option>`;
+        }).join("");
+        select.disabled = candidates.length === 0;
+        if (!candidates.length) select.innerHTML = '<option value="">No submitted applications are ready for a clearance slip</option>';
+      }
+
+      document.getElementById("clearanceModal").addEventListener("show.bs.modal", () => {
+        loadClearanceCandidates().catch((error) => alert(error.message));
+      });
+
+      document.getElementById("clearanceForm").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const applicationId = document.getElementById("clearanceApplicationId").value;
+        const file = document.getElementById("clearanceFile").files[0];
+        if (!applicationId || !file) {
+          alert("Select an application and a clearance PDF.");
+          return;
+        }
+        const formData = new FormData();
+        formData.append("clearance", file);
+        formData.append("csrfToken", csrfToken);
+        const button = document.getElementById("clearanceSubmit");
+        button.disabled = true;
+        try {
+          const response = await fetch(`/api/admin/applications/${encodeURIComponent(applicationId)}/clearance`, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "X-CSRF-Token": csrfToken },
+            body: formData,
+          });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error?.message || "Clearance upload failed.");
+          bootstrap.Modal.getInstance(document.getElementById("clearanceModal")).hide();
+          document.getElementById("clearanceForm").reset();
+          await loadClearances();
+          await loadStats();
+          alert(data.message);
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          button.disabled = false;
+        }
+      });
+
+      initialize().then(loadClearances).catch(error=>alert(error.message));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Applicant Dashboard | NERD Clearance Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../assets/css/public.css" rel="stylesheet">
+    <style>
+      body { background: #f3f6fa; }
+      .dashboard-nav { min-height: 72px; background: var(--navy); }
+      .dashboard-main { max-width: 1180px; margin: 0 auto; padding: 48px 20px; }
+      .welcome-card {
+        border-radius: 18px; padding: 34px; color: var(--white);
+        background: var(--navy);
+      }
+      .welcome-card h1 { margin: 8px 0 10px; font-size: clamp(28px, 4vw, 42px); }
+      .welcome-card p { color: rgba(255,255,255,.68); }
+      .progress-card, .action-card {
+        height: 100%; border: 1px solid var(--border); border-radius: 14px;
+        padding: 24px; background: var(--white);
+      }
+      .progress-card h2, .action-card h2 { color: var(--navy); font-size: 18px; }
+      .stage-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #edf1f5; }
+      .stage-row:last-child { border-bottom: 0; }
+      .stage-row i { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #eef3f9; color: var(--navy); }
+      .stage-row strong { display: block; color: var(--navy); font-size: 14px; }
+      .stage-row small { color: var(--muted); }
+      .action-card .btn-primary { background: var(--navy); border: 0; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar dashboard-nav navbar-dark">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+          <span class="brand-mark">OJ</span>
+          <span class="brand-copy"><strong>OGAH JOHN BUSINESS CENTER</strong><small>UDUS MINI MART</small></span>
+        </a>
+        <button class="btn btn-outline-light btn-sm" id="logoutButton" type="button">Log out</button>
+      </div>
+    </nav>
+    <main class="dashboard-main">
+      <section class="welcome-card mb-4">
+        <span class="section-kicker">Applicant dashboard</span>
+        <h1 id="welcomeName">Welcome</h1>
+        <p class="mb-0">Follow the required stages from eligibility screening through final clearance.</p>
+      </section>
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <section class="progress-card">
+            <h2>Registration journey</h2>
+            <div class="stage-row"><i class="bi bi-check-circle"></i><div><strong>1. Account registration</strong><small>Complete</small></div></div>
+            <div class="stage-row"><i class="bi bi-clipboard-check"></i><div><strong>2. Eligibility screening</strong><small id="eligibilityStage">Required next step</small></div></div>
+            <div class="stage-row"><i class="bi bi-credit-card"></i><div><strong>3. Payment verification</strong><small id="paymentStage">Available after eligibility approval</small></div></div>
+            <div class="stage-row"><i class="bi bi-file-earmark-text"></i><div><strong>4. Application form</strong><small id="applicationStage">Locked until payment approval</small></div></div>
+            <div class="stage-row"><i class="bi bi-award"></i><div><strong>5. Final clearance</strong><small id="clearanceStage">Available after official processing</small></div></div>
+          </section>
+        </div>
+        <div class="col-lg-5">
+          <section class="action-card">
+            <h2 id="actionTitle">Next action</h2>
+            <p class="text-secondary" id="actionMessage">Complete your server-verified eligibility screening before submitting a payment claim.</p>
+            <div id="registrationActions">
+              <a class="btn btn-primary w-100" href="/applicant/eligibility">Complete eligibility screening</a>
+              <hr>
+              <p class="small text-secondary mb-0">No application or payment status will be created until the required stages are completed.</p>
+              <a class="btn btn-outline-primary w-100 mt-3" href="/applicant/application">Open application form</a>
+            </div>
+            <div id="correctionNotice" class="mt-3"></div>
+            <div id="clearanceNotice" class="mt-3"></div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <script>
+      (async () => {
+        try {
+          const response = await fetch("/api/session", { credentials: "same-origin" });
+          if (!response.ok) {
+            window.location.assign("/applicant/login");
+            return;
+          }
+          const data = await response.json();
+          document.getElementById("welcomeName").textContent = `Welcome, ${data.user.fullName}`;
+          const statusResponse = await fetch("/api/application/status", { credentials: "same-origin" });
+          if (!statusResponse.ok) throw new Error("Could not load your registration status.");
+          const statusData = await statusResponse.json();
+          const application = statusData.application;
+          if (application) {
+            const actions = document.getElementById("registrationActions");
+            const title = document.getElementById("actionTitle");
+            const message = document.getElementById("actionMessage");
+            document.getElementById("eligibilityStage").textContent = "Complete";
+            document.getElementById("paymentStage").textContent = "Approved";
+            actions.classList.add("d-none");
+            title.textContent = application.status === "draft" ? "Continue your application" : "Registration submitted";
+            if (application.status === "draft") {
+              document.getElementById("applicationStage").textContent = "Draft — not submitted";
+              message.textContent = "Your application is saved as a draft. Continue and submit it when complete.";
+              actions.innerHTML = '<a class="btn btn-primary w-100" href="/applicant/application">Continue application</a>';
+              actions.classList.remove("d-none");
+            } else if (application.status === "correction_required") {
+              document.getElementById("applicationStage").textContent = "Correction required";
+              message.textContent = "The administrator requested a correction. Update only the requested fields, then resubmit.";
+              actions.innerHTML = '<a class="btn btn-primary w-100" href="/applicant/application">Make requested correction</a>';
+              actions.classList.remove("d-none");
+            } else if (statusData.clearance?.available) {
+              document.getElementById("applicationStage").textContent = "Submitted";
+              document.getElementById("clearanceStage").textContent = "Uploaded — ready to print";
+              message.textContent = `Your registration is complete. Clearance slip uploaded ${new Date(statusData.clearance.uploadedAt).toLocaleString()}.`;
+              document.getElementById("clearanceNotice").innerHTML =
+                `<div class="alert alert-success mb-0"><strong>Clearance slip ready</strong><br>
+                 <a class="btn btn-success btn-sm mt-2 me-1" href="/api/applicant/clearance/view" target="_blank" rel="noopener">View PDF</a>
+                 <a class="btn btn-outline-success btn-sm mt-2 me-1" href="/api/applicant/clearance/download">Download</a>
+                 <a class="btn btn-outline-secondary btn-sm mt-2" href="/api/applicant/clearance/print" target="_blank" rel="noopener">Print PDF</a>
+                 </div>`;
+            } else {
+              document.getElementById("applicationStage").textContent = "Submitted — awaiting administrator";
+              document.getElementById("clearanceStage").textContent = "Waiting for administrator to upload your slip";
+              message.textContent = `Your application${application.reference ? ` (${application.reference})` : ""} has been submitted. Please wait while the administrator processes your registration and uploads your clearance slip. You cannot submit another registration.`;
+            }
+          }
+          const correctionResponse = await fetch("/api/application/corrections", { credentials: "same-origin" });
+          if (correctionResponse.ok) {
+            const correctionData = await correctionResponse.json();
+            const openCorrection = correctionData.corrections.find((item) => item.status === "open");
+            if (openCorrection) {
+              document.getElementById("correctionNotice").innerHTML =
+                `<div class="alert alert-warning mb-0"><strong>Correction required</strong><br>${escapeHtml(openCorrection.reason)}</div>`;
+            }
+          }
+        } catch (_error) {
+          document.getElementById("actionTitle").textContent = "Registration status unavailable";
+          document.getElementById("actionMessage").textContent = "Please refresh this page or contact the registration team if the problem continues.";
+        }
+      })();
+
+      function escapeHtml(value) {
+        const element = document.createElement("span");
+        element.textContent = value == null ? "" : String(value);
+        return element.innerHTML;
+      }
+
+      document.getElementById("logoutButton").addEventListener("click", async () => {
+        const csrfResponse = await fetch("/api/csrf-token", { credentials: "same-origin" });
+        const csrf = await csrfResponse.json();
+        const response = await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "X-CSRF-Token": csrf.csrfToken },
+          body: JSON.stringify({ csrfToken: csrf.csrfToken })
+        });
+        const data = await response.json();
+        if (response.ok) window.location.assign(data.redirect);
+      });
+    </script>
+  </body>
+</html>
