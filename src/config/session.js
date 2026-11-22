@@ -1,12 +1,8 @@
 const session = require("express-session");
 const MySQLStore = require("express-mysql-session")(session);
+const pool = require("./database");
 
 const options = {
-  host: process.env.DB_HOST || "127.0.0.1",
-  port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
   createDatabaseTable: true,
   schema: {
     tableName: "sessions",
@@ -19,7 +15,7 @@ const options = {
 };
 
 function createSessionStore() {
-  return new MySQLStore(options);
+  return new MySQLStore(options, pool);
 }
 
 module.exports = { createSessionStore };

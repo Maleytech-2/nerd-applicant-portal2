@@ -1,13 +1,11 @@
 require("dotenv").config();
 const mysql = require("mysql2/promise");
+const { getDatabaseConfig } = require("../config/databaseConfig");
 
 async function migrate() {
+  const databaseConfig = getDatabaseConfig();
   const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    ...databaseConfig,
   });
   const [columns] = await connection.execute(
     `SELECT COLUMN_NAME
@@ -15,7 +13,7 @@ async function migrate() {
      WHERE TABLE_SCHEMA=:databaseName
        AND TABLE_NAME='users'
        AND COLUMN_NAME='password_changed_at'`,
-    { databaseName: process.env.DB_NAME }
+    { databaseName: databaseConfig.database }
   );
   if (!columns.length) {
     await connection.execute(

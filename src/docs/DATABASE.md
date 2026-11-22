@@ -4,9 +4,14 @@
 
 1. Create a MySQL 8 user and `.env` file.
 2. Copy `.env.example` to `.env`.
-3. Set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME`.
+3. Set `DATABASE_URL` to `mysql://USER:PASSWORD@HOST:PORT/DATABASE`. URL-encode
+   reserved characters in the username or password.
 4. Run `npm install`.
 5. Run `npm run db:init`.
+
+Private database hostnames such as `mysql.railway.internal` resolve only from
+services connected to that provider's private network. Use the provider's public
+connection host when the application runs elsewhere or on your local computer.
 
 For an existing database, run `npm run db:migrate:programme-types` to expand
 `applications.programme_type` for the supported qualification names. The migration
@@ -28,8 +33,10 @@ administrator approval of a restricted-category request.
   to administrator routes. Approval sets the configured category fee and unlocks the
   usual payment and application steps.
 
-The initialization script can create the configured database and schema; the database user needs
-permission to create and alter tables.
+The database name comes from the URL path. The initialization script can create
+the configured database and schema; the database user needs permission to create
+and alter tables. Set `DB_INIT_CREATE_DATABASE=false` when the provider already
+created the database and the user cannot create databases.
 
 ## Core Relationships
 

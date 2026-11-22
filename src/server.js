@@ -1,6 +1,4 @@
 require("dotenv").config();
-const app = require("./app");
-const { processEmailQueue } = require("./services/emailService");
 
 const EMAIL_QUEUE_INTERVAL_MS = 60 * 1000;
 
@@ -8,11 +6,7 @@ function validateProductionEnvironment() {
   if (process.env.NODE_ENV !== "production") return;
   const required = [
     "SESSION_SECRET",
-    "DB_HOST",
-    "DB_PORT",
-    "DB_USER",
-    "DB_PASSWORD",
-    "DB_NAME",
+    "DATABASE_URL",
     "APP_URL",
     "PRIVATE_STORAGE_ROOT",
   ];
@@ -26,6 +20,8 @@ function validateProductionEnvironment() {
 }
 
 validateProductionEnvironment();
+const app = require("./app");
+const { processEmailQueue } = require("./services/emailService");
 const port = Number(process.env.PORT || 3000);
 
 const server = app.listen(port, () => {

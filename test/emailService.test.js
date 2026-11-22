@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+process.env.DATABASE_URL ||= "mysql://test:test@127.0.0.1/test";
 const {
   escapeHtml,
   renderTemplate,

@@ -51,7 +51,10 @@ $env:DB_INIT_CREATE_DATABASE=$null
 npm run db:migrate
 ```
 
-Set `DB_NAME` to the database name assigned by the host.
+Set `DATABASE_URL` in `.env` to
+`mysql://USER:PASSWORD@HOST:PORT/DATABASE`, using the database name assigned by
+the host. URL-encode reserved characters in the username or password. Keep the
+URL private and do not paste it into chat or commit it.
 Do not use a MySQL account with unnecessary global privileges.
 
 ## First Administrator

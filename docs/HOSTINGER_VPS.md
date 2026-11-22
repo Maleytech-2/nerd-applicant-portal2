@@ -135,11 +135,7 @@ NODE_ENV=production
 PORT=3000
 APP_URL=https://portal.example.com
 
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=nerd_portal
-DB_PASSWORD=REPLACE_WITH_THE_MYSQL_PASSWORD
-DB_NAME=nerd_clearance_portal
+DATABASE_URL=mysql://nerd_portal:URL_ENCODED_PASSWORD@127.0.0.1:3306/nerd_clearance_portal
 
 SESSION_SECRET=REPLACE_WITH_OUTPUT_FROM_OPENSSL
 PRIVATE_STORAGE_ROOT=/var/lib/nerd-clearance-portal/private

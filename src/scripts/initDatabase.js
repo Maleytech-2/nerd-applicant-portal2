@@ -2,21 +2,19 @@ const fs = require("fs");
 const path = require("path");
 const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
+const { getDatabaseConfig } = require("../config/databaseConfig");
 
 dotenv.config();
 
 async function initDatabase() {
-  const databaseName = process.env.DB_NAME || "nerd_clearance_portal";
+  const databaseConfig = getDatabaseConfig();
+  const databaseName = databaseConfig.database;
   if (!/^[A-Za-z0-9_]+$/.test(databaseName)) {
-    throw new Error("DB_NAME must contain only letters, numbers, and underscores.");
+    throw new Error("The database name in DATABASE_URL must contain only letters, numbers, and underscores.");
   }
   const createDatabase = process.env.DB_INIT_CREATE_DATABASE !== "false";
   const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    ...(createDatabase ? {} : { database: databaseName }),
+    ...getDatabaseConfig({ includeDatabase: !createDatabase }),
     multipleStatements: true,
   });
 
