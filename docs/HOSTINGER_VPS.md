@@ -13,12 +13,15 @@ deploy this application as a static site or to PHP-only hosting. See
 
 ## 1. Prepare Hostinger and your domain
 
-1. Create a VPS with Ubuntu 24.04 LTS in Hostinger hPanel.
-2. Point your domain's DNS `A` record to the VPS IPv4 address. If you use
+1. Choose a KVM 2 VPS (2 vCPU, 8 GB RAM, 100 GB storage) for this production
+   deployment. KVM 1 (1 vCPU, 4 GB RAM, 50 GB storage) is a smaller starter
+   option for low traffic.
+2. Select Ubuntu 24.04 LTS as the operating system.
+3. Point your domain's DNS `A` record to the VPS IPv4 address. If you use
    `www`, point it to the same address.
-3. In hPanel, allow inbound SSH, HTTP, and HTTPS traffic. Keep SSH available
+4. In hPanel, allow inbound SSH, HTTP, and HTTPS traffic. Keep SSH available
    before enabling any server firewall.
-4. Connect to the VPS using SSH as the account provided by Hostinger.
+5. Connect to the VPS using SSH as the account provided by Hostinger.
 
 Replace `portal.example.com` below with your actual domain.
 
@@ -68,12 +71,12 @@ CREATE DATABASE nerd_clearance_portal
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-CREATE USER 'nerd_portal'@'localhost'
+CREATE USER 'nerd_portal'@'127.0.0.1'
   IDENTIFIED BY 'REPLACE_WITH_A_UNIQUE_RANDOM_PASSWORD';
 
 GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES
   ON nerd_clearance_portal.*
-  TO 'nerd_portal'@'localhost';
+  TO 'nerd_portal'@'127.0.0.1';
 
 EXIT;
 ```
@@ -123,8 +126,9 @@ sudo nano /opt/nerd-clearance-portal/.env
 
 Set the following values. Replace the domain, database password, email
 addresses, and SMTP credentials with your own values. Generate a unique session
-secret with `openssl rand -hex 48`. For Gmail, use an App Password, not your
-normal Google password.
+secret with `openssl rand -hex 48`. Generate a database password with
+`openssl rand -hex 24`. Run these locally on the VPS and do not send the output
+in chat. For Gmail, use an App Password, not your normal Google password.
 
 ```dotenv
 NODE_ENV=production
@@ -172,8 +176,9 @@ that database instead of trying to create it with extra privileges:
 
 ```bash
 cd /opt/nerd-clearance-portal
-sudo -u nerdportal env DB_INIT_CREATE_DATABASE=false npm run db:init
-sudo -u nerdportal npm run db:migrate
+sudo -u nerdportal env DB_INIT_CREATE_DATABASE=false \
+  node src/scripts/initDatabase.js
+sudo -u nerdportal node src/scripts/migratePasswordChangedAt.js
 ```
 
 Create the first administrator in an interactive shell. Enter a unique
@@ -189,7 +194,7 @@ read -r -p "Administrator phone: " INIT_ADMIN_PHONE
 read -r -s -p "Unique administrator password: " INIT_ADMIN_PASSWORD
 printf '\n'
 export INIT_ADMIN_FULL_NAME INIT_ADMIN_EMAIL INIT_ADMIN_PHONE INIT_ADMIN_PASSWORD
-npm run admin:create
+node src/scripts/createFirstAdministrator.js
 unset INIT_ADMIN_FULL_NAME INIT_ADMIN_EMAIL INIT_ADMIN_PHONE INIT_ADMIN_PASSWORD
 exit
 ```
@@ -337,6 +342,7 @@ file. Use a unique password and do not add this file to the project:
 
 ```ini
 [client]
+host=127.0.0.1
 user=nerd_portal
 password=REPLACE_WITH_THE_MYSQL_PASSWORD
 ```
