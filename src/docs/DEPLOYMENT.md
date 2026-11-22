@@ -12,6 +12,12 @@ Use a host that supports:
 
 Traditional PHP-only hosting is not suitable.
 
+For a step-by-step Hostinger VPS setup, see [Hostinger VPS Deployment](../../docs/HOSTINGER_VPS.md).
+The VPS route is recommended for this portal because it gives you control over
+the long-running Node.js process and persistent private document storage. A
+managed Node.js plan is suitable only if it explicitly supports persistent
+private files, MySQL connections, and the portal's background email processing.
+
 ## Environment
 
 Copy `.env.example` to `.env` on the server and set every required value.
@@ -32,14 +38,20 @@ automatically in production.
 
 ## Database
 
-Create a limited MySQL user, initialize the database, and migrate if upgrading:
+Create a limited MySQL user and initialize the database. By default,
+initialization creates the database and requires database-creation privileges.
+If the hosting provider created the database already and the user cannot create
+databases, initialize only the selected database:
 
 ```powershell
 npm install --omit=dev
+$env:DB_INIT_CREATE_DATABASE="false"
 npm run db:init
+$env:DB_INIT_CREATE_DATABASE=$null
 npm run db:migrate
 ```
 
+Set `DB_NAME` to the database name assigned by the host.
 Do not use a MySQL account with unnecessary global privileges.
 
 ## First Administrator

@@ -8,6 +8,7 @@ This application is not the official NERD website.
 See [Deployment documentation](docs/DEPLOYMENT.md) for environment variables,
 first-administrator bootstrap, SMTP queue processing, backups, HTTPS, verification,
 and hosting requirements.
+For a Hostinger VPS walkthrough, see [Hostinger VPS Deployment](docs/HOSTINGER_VPS.md).
 
 ## Phase 1 Status
 
