@@ -5,6 +5,7 @@ const {
   MIGRATIONS_TABLE,
   loadMigrations,
   runMigrations,
+  migrateConfiguredDatabase,
   getStatus,
 } = require("../src/scripts/migrate");
 
@@ -147,4 +148,73 @@ test("reports the baseline migration as pending for an untracked database", asyn
     "002_add_column.sql",
   ]);
   assert.equal(status.isLegacyDatabase, true);
+});
+
+test("server startup migrations open a configured connection and close it", async () => {
+  const previousUrl = process.env.DATABASE_URL_STRING;
+  process.env.DATABASE_URL_STRING = "mysql://portal:secret@127.0.0.1:3306/railway";
+
+  const baseConnection = createFakeConnection();
+  let closed = false;
+  const connectionFactory = async (config) => {
+    assert.equal(config.database, "railway");
+    assert.equal(config.host, "127.0.0.1");
+    return {
+      ...baseConnection,
+      async end() {
+        closed = true;
+      },
+    };
+  };
+
+  try {
+    const result = await migrateConfiguredDatabase({
+      logger: silentLogger,
+      connectionFactory,
+    });
+
+    assert.ok(result.newlyApplied.length >= 4);
+    assert.equal(result.newlyApplied[0], "001_initial_schema.sql");
+    assert.equal(closed, true);
+  } finally {
+    if (previousUrl === undefined) {
+      delete process.env.DATABASE_URL_STRING;
+    } else {
+      process.env.DATABASE_URL_STRING = previousUrl;
+    }
+  }
+});
+
+test("server startup migrations close the connection even when a migration fails", async () => {
+  const previousUrl = process.env.DATABASE_URL_STRING;
+  process.env.DATABASE_URL_STRING = "mysql://portal:secret@127.0.0.1:3306/railway";
+
+  const failingConnection = {
+    async execute() {
+      throw new Error("boom");
+    },
+    async query() {
+      throw new Error("boom");
+    },
+    async end() {
+      failingConnection.closed = true;
+    },
+  };
+
+  try {
+    await assert.rejects(
+      migrateConfiguredDatabase({
+        logger: silentLogger,
+        connectionFactory: async () => failingConnection,
+      }),
+      /boom/
+    );
+    assert.equal(failingConnection.closed, true);
+  } finally {
+    if (previousUrl === undefined) {
+      delete process.env.DATABASE_URL_STRING;
+    } else {
+      process.env.DATABASE_URL_STRING = previousUrl;
+    }
+  }
 });

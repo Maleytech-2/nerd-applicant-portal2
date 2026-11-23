@@ -131,6 +131,22 @@ async function runMigrations({ connection, migrations = loadMigrations(), logger
   }
 }
 
+async function migrateConfiguredDatabase({ logger = console, connectionFactory } = {}) {
+  const databaseConfig = getDatabaseConfig();
+  const connection = connectionFactory
+    ? await connectionFactory(databaseConfig)
+    : await mysql.createConnection({
+        ...databaseConfig,
+        multipleStatements: true,
+      });
+
+  try {
+    return await runMigrations({ connection, logger });
+  } finally {
+    await connection.end();
+  }
+}
+
 async function getStatus(connection, migrations = loadMigrations()) {
   const hasMigrationsTable = await tableExists(connection, MIGRATIONS_TABLE);
   const appliedVersions = hasMigrationsTable ? await getAppliedVersions(connection) : new Set();
@@ -202,6 +218,7 @@ module.exports = {
   MIGRATIONS_TABLE,
   loadMigrations,
   runMigrations,
+  migrateConfiguredDatabase,
   getStatus,
   tableExists,
 };

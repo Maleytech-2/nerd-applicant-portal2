@@ -26,22 +26,50 @@ function validatePrivateStorage() {
   fs.accessSync(PRIVATE_STORAGE_ROOT, fs.constants.W_OK);
 }
 
-validateProductionEnvironment();
-validatePrivateStorage();
-const app = require("./app");
-const { processEmailQueue } = require("./services/emailService");
-const port = Number(process.env.PORT || 3000);
+let server;
+let emailQueueTimer;
 
-const server = app.listen(port, () => {
-  console.log(`NERD Clearance Portal listening on port ${port}`);
-  processPendingEmails();
-});
+async function applyPendingMigrations() {
+  const { migrateConfiguredDatabase } = require("./scripts/migrate");
+  const result = await migrateConfiguredDatabase();
+  if (result.newlyApplied.length) {
+    console.log(
+      `Applied ${result.newlyApplied.length} database migration(s): ${result.newlyApplied.join(", ")}`
+    );
+  } else {
+    console.log("Database schema is up to date.");
+  }
+}
+
+async function start() {
+  validateProductionEnvironment();
+  validatePrivateStorage();
+
+  try {
+    await applyPendingMigrations();
+  } catch (error) {
+    console.error("Database migration failed; refusing to start:", error.message);
+    process.exit(1);
+  }
+
+  const app = require("./app");
+  const port = Number(process.env.PORT || 3000);
+
+  server = app.listen(port, () => {
+    console.log(`NERD Clearance Portal listening on port ${port}`);
+    processPendingEmails();
+  });
+
+  emailQueueTimer = setInterval(processPendingEmails, EMAIL_QUEUE_INTERVAL_MS);
+  emailQueueTimer.unref();
+}
 
 let emailQueueProcessing = false;
 async function processPendingEmails() {
   if (emailQueueProcessing) return;
   emailQueueProcessing = true;
   try {
+    const { processEmailQueue } = require("./services/emailService");
     const result = await processEmailQueue({ batchSize: 20, maxAttempts: 5 });
     if (result.reason === "SMTP_NOT_CONFIGURED") {
       console.warn("Email delivery is disabled: configure SMTP credentials in the administrator settings.");
@@ -57,15 +85,21 @@ async function processPendingEmails() {
   }
 }
 
-const emailQueueTimer = setInterval(processPendingEmails, EMAIL_QUEUE_INTERVAL_MS);
-emailQueueTimer.unref();
-
 function shutdown(signal) {
   console.log(`${signal} received; shutting down gracefully.`);
-  clearInterval(emailQueueTimer);
+  if (emailQueueTimer) clearInterval(emailQueueTimer);
+  if (!server) {
+    process.exit(0);
+    return;
+  }
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(1), 10000).unref();
 }
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
+
+start().catch((error) => {
+  console.error("Failed to start the portal:", error.message);
+  process.exit(1);
+});

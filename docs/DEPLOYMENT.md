@@ -97,17 +97,24 @@ filesystem is ephemeral and all uploads disappear on the next deploy or restart.
 
 ### Migrations
 
-The repository's `railway.json` declares `npm run db:migrate` as a pre-deploy
-command. Railway executes it after the build and before the new deployment
-receives traffic, with access to the service's `DATABASE_URL_STRING` and private
-network. A failing migration stops the deployment, so the previous release
-keeps serving.
+The server applies pending migrations on every startup, before it begins
+listening. Startup calls the same runner as `npm run db:migrate`: it holds the
+MySQL advisory lock, records applied files in `schema_migrations`, and applies
+new files in order. If a migration fails, the process logs the error and exits
+instead of serving traffic against an incomplete schema. Multiple replicas can
+start together safely because the advisory lock serializes them.
 
-`railway.json` uses Railway's deprecated Config as Code format, and Railway
-stops reading it on 2026-12-01. Also, new services cannot opt into Config as
-Code. Confirm the pre-deploy command appears on the service's deploy settings;
-if it does not, set it in the Railway dashboard under **Settings → Deploy →
-Pre-deploy Command**:
+This means a normal deploy always creates or upgrades the schema, even when the
+platform ignores `railway.json`. The first deploy against an empty Railway
+MySQL database runs the baseline migration; `npm run db:init` is not needed.
+
+`railway.json` also declares `npm run db:migrate` as an optional pre-deploy
+command. Running both is safe and idempotent, but the pre-deploy step is not
+required. Note that Railway's Config as Code format in `railway.json` is
+deprecated and stops being read on 2026-12-01, and new services cannot opt into
+it. If you want migrations to run before the new release receives traffic, set
+the command in the Railway dashboard under **Settings → Deploy → Pre-deploy
+Command**:
 
 ```text
 npm run db:migrate
@@ -116,11 +123,6 @@ npm run db:migrate
 Alternatively, migrate the setting to Railway Infrastructure as Code
 (`.railway/railway.ts`) with `preDeploy: "npm run db:migrate"` and apply it with
 `railway config apply`.
-
-Do not also run migrations from `npm start`. The pre-deploy step is the single
-place that should apply schema changes. The first deploy against an empty
-Railway MySQL database runs the baseline migration; `npm run db:init` is not
-needed.
 
 ### First administrator
 

@@ -20,6 +20,11 @@ connection host when the application runs elsewhere or on your local computer.
 files in `schema_migrations`, holds a MySQL advisory lock while it works, and is
 safe to run repeatedly, on every deployment, and from multiple replicas.
 
+The server applies pending migrations automatically on startup, before it
+listens on its port. A migration failure aborts startup so the app never serves
+requests against an incomplete schema. Running `npm run db:migrate` manually
+remains useful for inspecting or repairing a database before a deploy.
+
 ```powershell
 npm run db:migrate          # apply pending migrations
 npm run db:migrate:status   # list applied and pending migrations
