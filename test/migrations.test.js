@@ -70,7 +70,7 @@ test("applies every migration to a fresh database", async () => {
 });
 
 test("baselines an existing database instead of re-running the schema seed", async () => {
-  const connection = createFakeConnection({ existingTables: ["users"] });
+  const connection = createFakeConnection({ existingTables: ["users", "system_settings"] });
 
   const result = await runMigrations({ connection, migrations: fakeMigrations, logger: silentLogger });
 
@@ -79,9 +79,30 @@ test("baselines an existing database instead of re-running the schema seed", asy
   assert.deepEqual(connection.executed, ["SECOND SQL"]);
 });
 
-test("does nothing when every migration has been applied", async () => {
+test("runs the baseline when an existing database is only partially initialized", async () => {
+  const connection = createFakeConnection({ existingTables: ["users"] });
+
+  const result = await runMigrations({ connection, migrations: fakeMigrations, logger: silentLogger });
+
+  assert.equal(result.baselined, false);
+  assert.deepEqual(connection.executed, ["BASELINE SQL", "SECOND SQL"]);
+});
+
+test("repairs an applied baseline when its final table is missing", async () => {
   const connection = createFakeConnection({
     existingTables: ["users", MIGRATIONS_TABLE],
+    appliedVersions: ["001_initial_schema.sql", "002_add_column.sql"],
+  });
+
+  const result = await runMigrations({ connection, migrations: fakeMigrations, logger: silentLogger });
+
+  assert.deepEqual(result.newlyApplied, []);
+  assert.deepEqual(connection.executed, ["BASELINE SQL"]);
+});
+
+test("does nothing when every migration has been applied", async () => {
+  const connection = createFakeConnection({
+    existingTables: ["users", "system_settings", MIGRATIONS_TABLE],
     appliedVersions: ["001_initial_schema.sql", "002_add_column.sql"],
   });
 
@@ -117,7 +138,7 @@ test("reports pending migrations for an existing database", async () => {
 });
 
 test("reports the baseline migration as pending for an untracked database", async () => {
-  const connection = createFakeConnection({ existingTables: ["users"] });
+  const connection = createFakeConnection({ existingTables: ["users", "system_settings"] });
 
   const status = await getStatus(connection, fakeMigrations);
 

@@ -8,6 +8,7 @@ const { getDatabaseConfig } = require("../config/databaseConfig");
 const MIGRATIONS_DIRECTORY = path.join(__dirname, "..", "..", "migrations");
 const MIGRATIONS_TABLE = "schema_migrations";
 const BASELINE_MIGRATION = "001_initial_schema.sql";
+const BASELINE_COMPLETE_TABLE = "system_settings";
 const LOCK_NAME = "nerd_clearance_portal_schema_migrations";
 const LOCK_TIMEOUT_SECONDS = 60;
 
@@ -84,12 +85,25 @@ async function runMigrations({ connection, migrations = loadMigrations(), logger
   // incremental migrations that follow it. If schema_migrations already
   // exists, a previous migration attempt started; rerun any pending files.
   const migrationsTableExisted = await tableExists(connection, MIGRATIONS_TABLE);
-  const isLegacyDatabase = (await tableExists(connection, "users")) && !migrationsTableExisted;
+  const isLegacyDatabase =
+    (await tableExists(connection, "users")) &&
+    (await tableExists(connection, BASELINE_COMPLETE_TABLE)) &&
+    !migrationsTableExisted;
   await ensureMigrationsTable(connection);
   await acquireLock(connection);
 
   try {
     const appliedVersions = await getAppliedVersions(connection);
+    const baselineMigration = migrations.find((migration) => migration.version === BASELINE_MIGRATION);
+    if (
+      baselineMigration &&
+      appliedVersions.has(BASELINE_MIGRATION) &&
+      !(await tableExists(connection, BASELINE_COMPLETE_TABLE))
+    ) {
+      logger.log(`Baseline schema is incomplete; reapplying ${BASELINE_MIGRATION}.`);
+      await connection.query(baselineMigration.sql);
+    }
+
     const pending = migrations.filter((migration) => !appliedVersions.has(migration.version));
     const newlyApplied = [];
     let baselined = false;
@@ -120,7 +134,10 @@ async function runMigrations({ connection, migrations = loadMigrations(), logger
 async function getStatus(connection, migrations = loadMigrations()) {
   const hasMigrationsTable = await tableExists(connection, MIGRATIONS_TABLE);
   const appliedVersions = hasMigrationsTable ? await getAppliedVersions(connection) : new Set();
-  const isLegacyDatabase = (await tableExists(connection, "users")) && !hasMigrationsTable;
+  const isLegacyDatabase =
+    (await tableExists(connection, "users")) &&
+    (await tableExists(connection, BASELINE_COMPLETE_TABLE)) &&
+    !hasMigrationsTable;
 
   return {
     applied: migrations.filter((migration) => appliedVersions.has(migration.version)),

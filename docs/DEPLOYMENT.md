@@ -139,7 +139,8 @@ The password is not stored in the repository; set it only for that command.
 
 ### Health and backups
 
-Railway checks `GET /health`, which verifies the database connection. Enable
+Railway checks `GET /health`, which verifies the database connection and that
+the baseline schema is present. Enable
 Railway MySQL backups or point the existing backup procedure at the database's
 public connection URL; private connections are only reachable from inside the
 project.

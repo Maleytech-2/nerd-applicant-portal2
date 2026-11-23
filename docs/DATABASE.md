@@ -25,10 +25,12 @@ npm run db:migrate          # apply pending migrations
 npm run db:migrate:status   # list applied and pending migrations
 ```
 
-The first run against a database created before migrations were tracked marks
-`001_initial_schema.sql` as applied instead of re-running it, so existing
+The first run against a complete database created before migrations were tracked
+marks `001_initial_schema.sql` as applied instead of re-running it, so existing
 administrator settings are not overwritten. The incremental migrations that
-follow use `INFORMATION_SCHEMA` guards and are safe for existing databases.
+follow use `INFORMATION_SCHEMA` guards and are safe for existing databases. If
+the baseline schema is only partially present, the baseline migration is re-run
+to create the missing tables.
 
 To change the schema, add a new numbered `.sql` file under `migrations/`; never
 edit a migration that has already been applied in production. MySQL does not

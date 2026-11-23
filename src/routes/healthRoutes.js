@@ -6,7 +6,8 @@ const router = express.Router();
 router.get("/health", async (_req, res, next) => {
   try {
     await db.query("SELECT 1");
-    res.json({ success: true, status: "ok", database: "connected" });
+    await db.query("SELECT 1 FROM system_settings LIMIT 1");
+    res.json({ success: true, status: "ok", database: "connected", schema: "ready" });
   } catch (error) {
     next(error);
   }
