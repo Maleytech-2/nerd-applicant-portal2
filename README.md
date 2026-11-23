@@ -240,6 +240,7 @@ Update `.env` with MySQL and session settings, then initialize:
 
 ```powershell
 npm run db:init
+npm run db:migrate
 npm start
 ```
 

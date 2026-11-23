@@ -8,9 +8,9 @@ if (-not (Test-Path $OutputDirectory)) {
 }
 
 $connectionUri = $null
-if (-not [Uri]::TryCreate($env:DATABASE_URL, [UriKind]::Absolute, [ref]$connectionUri) -or
+if (-not [Uri]::TryCreate($env:DATABASE_URL_STRING, [UriKind]::Absolute, [ref]$connectionUri) -or
     $connectionUri.Scheme -notin @("mysql", "mysql2")) {
-  throw "DATABASE_URL must be a MySQL connection URL."
+  throw "DATABASE_URL_STRING must be a MySQL connection URL."
 }
 
 $userInfo = $connectionUri.UserInfo.Split(":", 2)
@@ -23,7 +23,7 @@ $databasePassword = if ($userInfo.Length -gt 1) {
 }
 $databasePort = if ($connectionUri.Port -gt 0) { $connectionUri.Port } else { 3306 }
 if (-not $databaseUser -or -not $connectionUri.Host -or -not $databaseName) {
-  throw "DATABASE_URL must include a username, host, and database name."
+  throw "DATABASE_URL_STRING must include a username, host, and database name."
 }
 
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"

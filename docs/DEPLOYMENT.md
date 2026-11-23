@@ -51,11 +51,104 @@ $env:DB_INIT_CREATE_DATABASE=$null
 npm run db:migrate
 ```
 
-Set `DATABASE_URL` in `.env` to
+`npm run db:migrate` applies every pending file in `migrations/` and records it
+in `schema_migrations`. It is idempotent, takes an advisory lock, and is safe to
+run on every deployment. Use `npm run db:migrate:status` to inspect applied and
+pending migrations.
+
+Set `DATABASE_URL_STRING` in `.env` to
 `mysql://USER:PASSWORD@HOST:PORT/DATABASE`, using the database name assigned by
 the host. URL-encode reserved characters in the username or password. Keep the
 URL private and do not paste it into chat or commit it.
 Do not use a MySQL account with unnecessary global privileges.
+
+## Railway
+
+### Required service settings
+
+Add a MySQL service to the same Railway project and environment, then set these
+variables on the web service:
+
+```text
+NODE_ENV=production
+DATABASE_URL_STRING=${{MySQL.MYSQL_URL}}
+SESSION_SECRET=<at-least-32-random-characters>
+APP_URL=https://your-public-domain.example
+PRIVATE_STORAGE_ROOT=/data/private
+```
+
+Replace `MySQL` in the reference with the actual database service name. Use the
+private `MYSQL_URL`, not `MYSQL_PUBLIC_URL`, so traffic stays on Railway's
+private network. `DATABASE_URL_STRING` must use the `mysql://` scheme; `MYSQL_URL`
+already does.
+
+Generate the session secret locally:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+### Persistent uploads
+
+Attach a Railway volume to the web service and mount it at `/data`. Then set
+`PRIVATE_STORAGE_ROOT=/data/private`. Uploaded receipts, application documents,
+and clearance PDFs are written there. Without a volume, Railway's container
+filesystem is ephemeral and all uploads disappear on the next deploy or restart.
+
+### Migrations
+
+The repository's `railway.json` declares `npm run db:migrate` as a pre-deploy
+command. Railway executes it after the build and before the new deployment
+receives traffic, with access to the service's `DATABASE_URL_STRING` and private
+network. A failing migration stops the deployment, so the previous release
+keeps serving.
+
+`railway.json` uses Railway's deprecated Config as Code format, and Railway
+stops reading it on 2026-12-01. Also, new services cannot opt into Config as
+Code. Confirm the pre-deploy command appears on the service's deploy settings;
+if it does not, set it in the Railway dashboard under **Settings → Deploy →
+Pre-deploy Command**:
+
+```text
+npm run db:migrate
+```
+
+Alternatively, migrate the setting to Railway Infrastructure as Code
+(`.railway/railway.ts`) with `preDeploy: "npm run db:migrate"` and apply it with
+`railway config apply`.
+
+Do not also run migrations from `npm start`. The pre-deploy step is the single
+place that should apply schema changes. The first deploy against an empty
+Railway MySQL database runs the baseline migration; `npm run db:init` is not
+needed.
+
+### First administrator
+
+After the first successful deploy, open a Railway shell for the web service and
+run the bootstrap with temporary variables:
+
+```bash
+INIT_ADMIN_FULL_NAME="First Administrator" \
+INIT_ADMIN_EMAIL="admin@example.com" \
+INIT_ADMIN_PHONE="+2348000000000" \
+INIT_ADMIN_PASSWORD="Use-A-Unique-Strong-Password" \
+npm run admin:create
+```
+
+The password is not stored in the repository; set it only for that command.
+
+### Health and backups
+
+Railway checks `GET /health`, which verifies the database connection. Enable
+Railway MySQL backups or point the existing backup procedure at the database's
+public connection URL; private connections are only reachable from inside the
+project.
+
+Keep the web service at one replica unless you move the email queue worker out
+of the web process. The queue currently processes `email_notifications` in the
+running app process and does not take a row-level lock, so multiple replicas can
+send the same notification more than once.
+
 
 ## First Administrator
 

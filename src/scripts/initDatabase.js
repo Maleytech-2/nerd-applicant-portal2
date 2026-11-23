@@ -10,7 +10,7 @@ async function initDatabase() {
   const databaseConfig = getDatabaseConfig();
   const databaseName = databaseConfig.database;
   if (!/^[A-Za-z0-9_]+$/.test(databaseName)) {
-    throw new Error("The database name in DATABASE_URL must contain only letters, numbers, and underscores.");
+    throw new Error("The database name in DATABASE_URL_STRING must contain only letters, numbers, and underscores.");
   }
   const createDatabase = process.env.DB_INIT_CREATE_DATABASE !== "false";
   const connection = await mysql.createConnection({

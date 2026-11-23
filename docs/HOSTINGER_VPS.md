@@ -135,7 +135,7 @@ NODE_ENV=production
 PORT=3000
 APP_URL=https://portal.example.com
 
-DATABASE_URL=mysql://nerd_portal:URL_ENCODED_PASSWORD@127.0.0.1:3306/nerd_clearance_portal
+DATABASE_URL_STRING=mysql://nerd_portal:URL_ENCODED_PASSWORD@127.0.0.1:3306/nerd_clearance_portal
 
 SESSION_SECRET=REPLACE_WITH_OUTPUT_FROM_OPENSSL
 PRIVATE_STORAGE_ROOT=/var/lib/nerd-clearance-portal/private
@@ -174,7 +174,7 @@ that database instead of trying to create it with extra privileges:
 cd /opt/nerd-clearance-portal
 sudo -u nerdportal env DB_INIT_CREATE_DATABASE=false \
   node src/scripts/initDatabase.js
-sudo -u nerdportal node src/scripts/migratePasswordChangedAt.js
+sudo -u nerdportal node src/scripts/migrate.js
 ```
 
 Create the first administrator in an interactive shell. Enter a unique
@@ -410,10 +410,10 @@ sudo git pull --ff-only origin main
 sudo npm ci --omit=dev
 ```
 
-Run only the migrations required by that release, following the project's
-migration instructions. Restart and inspect the service:
+Run pending migrations, restart, and inspect the service:
 
 ```bash
+sudo -u nerdportal npm run db:migrate
 sudo systemctl restart nerd-clearance-portal
 sudo systemctl status nerd-clearance-portal --no-pager
 sudo journalctl -u nerd-clearance-portal -n 100 --no-pager

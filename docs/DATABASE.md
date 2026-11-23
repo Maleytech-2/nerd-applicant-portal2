@@ -4,22 +4,40 @@
 
 1. Create a MySQL 8 user and `.env` file.
 2. Copy `.env.example` to `.env`.
-3. Set `DATABASE_URL` to `mysql://USER:PASSWORD@HOST:PORT/DATABASE`. URL-encode
+3. Set `DATABASE_URL_STRING` to `mysql://USER:PASSWORD@HOST:PORT/DATABASE`. URL-encode
    reserved characters in the username or password.
 4. Run `npm install`.
 5. Run `npm run db:init`.
+6. Run `npm run db:migrate` to record and apply the tracked migrations.
 
 Private database hostnames such as `mysql.railway.internal` resolve only from
 services connected to that provider's private network. Use the provider's public
 connection host when the application runs elsewhere or on your local computer.
 
-For an existing database, run `npm run db:migrate:programme-types` to expand
-`applications.programme_type` for the supported qualification names. The migration
-preserves existing values.
+## Migrations
 
-Run `npm run db:migrate:restricted-cases` to add study mode and the administrator-only
-Exemption/Exclusion review queue. Eligible applicants can proceed to payment only after
-administrator approval of a restricted-category request.
+`migrations/` contains ordered, versioned SQL files. The runner records applied
+files in `schema_migrations`, holds a MySQL advisory lock while it works, and is
+safe to run repeatedly, on every deployment, and from multiple replicas.
+
+```powershell
+npm run db:migrate          # apply pending migrations
+npm run db:migrate:status   # list applied and pending migrations
+```
+
+The first run against a database created before migrations were tracked marks
+`001_initial_schema.sql` as applied instead of re-running it, so existing
+administrator settings are not overwritten. The incremental migrations that
+follow use `INFORMATION_SCHEMA` guards and are safe for existing databases.
+
+To change the schema, add a new numbered `.sql` file under `migrations/`; never
+edit a migration that has already been applied in production. MySQL does not
+support `ADD COLUMN IF NOT EXISTS`, so guard `ALTER TABLE` statements with an
+`INFORMATION_SCHEMA` check, as the existing migrations do.
+
+`npm run db:init` remains available for creating a database from
+`database/schema.sql`. Follow it with `npm run db:migrate` so the
+`schema_migrations` baseline is recorded.
 
 ## Restricted-category eligibility flow
 

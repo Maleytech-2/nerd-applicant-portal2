@@ -1,17 +1,17 @@
-function parseDatabaseUrl(databaseUrl = process.env.DATABASE_URL) {
+function parseDatabaseUrl(databaseUrl = process.env.DATABASE_URL_STRING) {
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required. Use mysql://user:password@host:3306/database.");
+    throw new Error("DATABASE_URL_STRING is required. Use mysql://user:password@host:3306/database.");
   }
 
   let url;
   try {
     url = new URL(databaseUrl);
   } catch {
-    throw new Error("DATABASE_URL must be a valid MySQL connection URL.");
+    throw new Error("DATABASE_URL_STRING must be a valid MySQL connection URL.");
   }
 
   if (!["mysql:", "mysql2:"].includes(url.protocol)) {
-    throw new Error("DATABASE_URL must use the mysql:// or mysql2:// scheme.");
+    throw new Error("DATABASE_URL_STRING must use the mysql:// or mysql2:// scheme.");
   }
 
   let database;
@@ -24,15 +24,15 @@ function parseDatabaseUrl(databaseUrl = process.env.DATABASE_URL) {
     password = decodeURIComponent(url.password);
     host = decodeURIComponent(url.hostname);
   } catch {
-    throw new Error("DATABASE_URL contains invalid URL encoding.");
+    throw new Error("DATABASE_URL_STRING contains invalid URL encoding.");
   }
   if (!url.hostname || !user || !database) {
-    throw new Error("DATABASE_URL must include a username, host, and database name.");
+    throw new Error("DATABASE_URL_STRING must include a username, host, and database name.");
   }
 
   const port = url.port ? Number(url.port) : 3306;
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error("DATABASE_URL must include a valid port.");
+    throw new Error("DATABASE_URL_STRING must include a valid port.");
   }
 
   const options = {};

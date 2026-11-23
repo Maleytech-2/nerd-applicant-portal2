@@ -1,12 +1,13 @@
 require("dotenv").config();
 
+const fs = require("fs");
 const EMAIL_QUEUE_INTERVAL_MS = 60 * 1000;
 
 function validateProductionEnvironment() {
   if (process.env.NODE_ENV !== "production") return;
   const required = [
     "SESSION_SECRET",
-    "DATABASE_URL",
+    "DATABASE_URL_STRING",
     "APP_URL",
     "PRIVATE_STORAGE_ROOT",
   ];
@@ -19,7 +20,14 @@ function validateProductionEnvironment() {
   }
 }
 
+function validatePrivateStorage() {
+  const { PRIVATE_STORAGE_ROOT } = require("./services/paymentService");
+  fs.mkdirSync(PRIVATE_STORAGE_ROOT, { recursive: true, mode: 0o700 });
+  fs.accessSync(PRIVATE_STORAGE_ROOT, fs.constants.W_OK);
+}
+
 validateProductionEnvironment();
+validatePrivateStorage();
 const app = require("./app");
 const { processEmailQueue } = require("./services/emailService");
 const port = Number(process.env.PORT || 3000);

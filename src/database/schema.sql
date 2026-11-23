@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS payments (
   receipt_file_hash CHAR(64) NULL,
   status ENUM('not_paid','pending_verification','under_review','approved','rejected','correction_required') NOT NULL DEFAULT 'pending_verification',
   active_approval_key BIGINT UNSIGNED
-    GENERATED ALWAYS AS (CASE WHEN status = 'approved' THEN applicant_id ELSE NULL END) STORED,
+    GENERATED ALWAYS AS (CASE WHEN status = 'approved' THEN applicant_id ELSE NULL END) VIRTUAL,
   duplicate_flag BOOLEAN NOT NULL DEFAULT FALSE,
   duplicate_match_payment_id BIGINT UNSIGNED NULL,
   internal_notes TEXT NULL,

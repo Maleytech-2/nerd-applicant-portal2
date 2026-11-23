@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 
-process.env.DATABASE_URL ||= "mysql://test:test@127.0.0.1/test";
+process.env.DATABASE_URL_STRING ||= "mysql://test:test@127.0.0.1/test";
 const { writeAuditLog } = require("../src/middleware/audit");
 
 test("audit logs can participate in the account-creation transaction", async () => {

@@ -1,3 +1,4 @@
+// Deprecated: use `npm run db:migrate` (src/scripts/migrate.js) instead.
 require("dotenv").config();
 const mysql = require("mysql2/promise");
 const { getDatabaseConfig } = require("../config/databaseConfig");

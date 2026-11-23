@@ -4,7 +4,7 @@
 
 1. Create a MySQL 8 user and `.env` file.
 2. Copy `.env.example` to `.env`.
-3. Set `DATABASE_URL` to `mysql://USER:PASSWORD@HOST:PORT/DATABASE`. URL-encode
+3. Set `DATABASE_URL_STRING` to `mysql://USER:PASSWORD@HOST:PORT/DATABASE`. URL-encode
    reserved characters in the username or password.
 4. Run `npm install`.
 5. Run `npm run db:init`.
