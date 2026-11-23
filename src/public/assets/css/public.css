@@ -90,6 +90,7 @@ body {
 .hero-section::after {
   content: "";
   position: absolute;
+  pointer-events: none;
   right: -200px;
   bottom: -300px;
   width: 650px;

@@ -1,7 +1,26 @@
 (function () {
   const nav = document.getElementById("mainNav");
+  const navToggle = nav?.querySelector(".navbar-toggler");
+  const navCollapse = document.getElementById("publicNavigation");
   const year = document.getElementById("currentYear");
   const copyItems = document.querySelectorAll("[data-copy]");
+
+  if (navToggle && navCollapse) {
+    navToggle.addEventListener("click", () => {
+      if (window.bootstrap) return;
+      const isExpanded = navToggle.getAttribute("aria-expanded") === "true";
+      navToggle.setAttribute("aria-expanded", String(!isExpanded));
+      navCollapse.classList.toggle("show", !isExpanded);
+    });
+
+    navCollapse.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.bootstrap) return;
+        navCollapse.classList.remove("show");
+        navToggle.setAttribute("aria-expanded", "false");
+      });
+    });
+  }
 
   if (year) {
     year.textContent = String(new Date().getFullYear());

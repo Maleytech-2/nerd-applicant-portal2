@@ -85,7 +85,15 @@
 
         if (!response.ok) {
           applyValidation(form, data.error?.details);
-          showAlert(form, data.error?.message || "Request could not be completed.", "danger");
+          const message = data.error?.message || "Request could not be completed.";
+          const requestId = data.error?.requestId;
+          showAlert(
+            form,
+            response.status >= 500 && requestId
+              ? `${message} Reference: ${requestId}. Please contact support.`
+              : message,
+            "danger"
+          );
           return;
         }
 

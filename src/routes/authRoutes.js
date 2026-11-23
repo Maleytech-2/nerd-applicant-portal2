@@ -128,6 +128,14 @@ router.post(
             passwordHash,
           }
         );
+        await writeAuditLog({
+          userId: result.insertId,
+          action: "account.created",
+          recordType: "users",
+          recordId: result.insertId,
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent"),
+        }, connection);
         await connection.commit();
 
         try {
@@ -140,15 +148,6 @@ router.post(
         } catch (notificationError) {
           console.error("Failed to queue account registration notification:", notificationError);
         }
-
-        await writeAuditLog({
-          userId: result.insertId,
-          action: "account.created",
-          recordType: "users",
-          recordId: result.insertId,
-          ipAddress: req.ip,
-          userAgent: req.get("user-agent"),
-        });
 
         req.session.regenerate((sessionError) => {
           if (sessionError) return next(sessionError);

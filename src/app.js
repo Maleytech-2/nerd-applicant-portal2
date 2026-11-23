@@ -8,6 +8,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const { createSessionStore } = require("./config/session");
+const { createContentSecurityPolicy } = require("./config/contentSecurityPolicy");
 const { csrfProtection } = require("./middleware/csrf");
 const { notFound, errorHandler } = require("./middleware/errorHandler");
 const healthRoutes = require("./routes/healthRoutes");
@@ -30,7 +31,9 @@ app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 app.use(helmet({
-  contentSecurityPolicy: process.env.NODE_ENV === "production",
+  contentSecurityPolicy: process.env.NODE_ENV === "production"
+    ? createContentSecurityPolicy(path.join(__dirname, "..", "public"))
+    : false,
   crossOriginResourcePolicy: { policy: "same-site" },
 }));
 

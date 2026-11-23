@@ -9,8 +9,8 @@ async function writeAuditLog({
   newValues = null,
   ipAddress = null,
   userAgent = null,
-}) {
-  await db.execute(
+}, connection = db) {
+  await connection.execute(
     `INSERT INTO audit_logs
        (user_id, action, record_type, record_id, previous_values, new_values, ip_address, user_agent)
      VALUES
