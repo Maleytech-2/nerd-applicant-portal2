@@ -86,10 +86,19 @@ app.get("/applicant/register.html", (_req, res) => {
 app.get("/applicant/login", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "auth", "login.html"));
 });
+app.get("/applicant/login.html", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "auth", "login.html"));
+});
 app.get("/applicant/forgot-password", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "auth", "forgot-password.html"));
 });
+app.get("/applicant/forgot-password.html", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "auth", "forgot-password.html"));
+});
 app.get("/applicant/reset-password", (_req, res) => {
+  res.sendFile(path.join(__dirname, "..", "public", "auth", "reset-password.html"));
+});
+app.get("/applicant/reset-password.html", (_req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "auth", "reset-password.html"));
 });
 app.get("/applicant/dashboard", requireAuth, requireRole("applicant"), (_req, res) => {

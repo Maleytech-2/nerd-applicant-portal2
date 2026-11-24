@@ -25,6 +25,33 @@ test("uses the MySQL default port and parses JSON URL options", () => {
   assert.deepEqual(config.ssl, { rejectUnauthorized: true });
 });
 
+test("falls back to separate DB_* variables", () => {
+  const names = ["DATABASE_URL_STRING", "DATABASE_URL", "DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME"];
+  const original = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  try {
+    delete process.env.DATABASE_URL_STRING;
+    delete process.env.DATABASE_URL;
+    process.env.DB_HOST = "127.0.0.1";
+    process.env.DB_PORT = "3306";
+    process.env.DB_USER = "root";
+    process.env.DB_PASSWORD = "";
+    process.env.DB_NAME = "nerd_clearance_portal";
+
+    assert.deepEqual(getDatabaseConfig(), {
+      host: "127.0.0.1",
+      port: 3306,
+      user: "root",
+      password: "",
+      database: "nerd_clearance_portal",
+    });
+  } finally {
+    for (const [name, value] of Object.entries(original)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+  }
+});
+
 test("can omit the database for initialization that creates the database", () => {
   const originalUrl = process.env.DATABASE_URL_STRING;
   process.env.DATABASE_URL_STRING = "mysql://portal:secret@db.example.com/nerd_portal";

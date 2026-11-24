@@ -1,5 +1,18 @@
-function parseDatabaseUrl(databaseUrl = process.env.DATABASE_URL_STRING) {
+function parseDatabaseUrl(databaseUrl = process.env.DATABASE_URL_STRING || process.env.DATABASE_URL) {
   if (!databaseUrl) {
+    if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) {
+      const port = Number(process.env.DB_PORT || 3306);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new Error("DB_PORT must contain a valid port.");
+      }
+      return {
+        host: process.env.DB_HOST,
+        port,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD || "",
+        database: process.env.DB_NAME,
+      };
+    }
     throw new Error("DATABASE_URL_STRING is required. Use mysql://user:password@host:3306/database.");
   }
 
